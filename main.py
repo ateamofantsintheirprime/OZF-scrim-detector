@@ -10,3 +10,5 @@ for directory in config.filetree: # if this is the only config asset accessed, j
 # Instantiate League objects
 
 league_list = [League(id) for id in config.recent_season_ids]
+
+# TODO Create analysis documents

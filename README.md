@@ -22,6 +22,9 @@ TO DO LIST:
     11) [] Add checking that the stored files contain valid data, and if not, make the API request and overwrite them.
     12) [x] Restructure datatypes and filetree
     13) [] Replace resources filetree with a proper DB
+    14) [] Get League start and end dates from the that the first and last matches are generated.
+        [Note] Sometimes all regular season matches are generated at the start of the league (round robin), and sometimes they are generated week by week. Thankfully Grand-finals are always generated immediately prior to the final week of the season.
+        14.1) Different divisions end at different times, make sure we take the date of the latest Grand-finals.
 
 NOTES: 
 

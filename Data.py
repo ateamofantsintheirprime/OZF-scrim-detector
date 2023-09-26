@@ -2,9 +2,9 @@ import os.path, json, requests
 from pprint import pprint
 
 def request_batch(cache_filepath_prefix, url_prefix : str, url_ids : list, headers = {}) -> list:
-    """ Make multiple requests for different ID's
-    from the same URL prefix, return data as a List of JSONObjects
-    Store each JSONObject at cache_filepath_prefix/url_id"""
+    """ Make multiple requests for different IDs
+    from the same URL prefix, return data as a List
+    Store each element at cache_filepath_prefix/url_id"""
     
     data = []
 
@@ -36,7 +36,7 @@ def request(cache_filepath, url, headers = {}):
             data = json.loads(f.read().encode("ascii", "ignore"))
             # TODO: Check if file is healthy, if not, then replace it.
     else:
-        # Make API request and store it
+        # Make API request
         print(f"Making request for url: {url}")
         resp = requests.get(url, headers=headers)
         if resp.status_code !=  200:
@@ -46,7 +46,7 @@ def request(cache_filepath, url, headers = {}):
         resp_text = resp.text.encode("ascii", "ignore")
         data = json.loads(resp_text)
 
-        # Write these to the cache.
+        # Cache API response.
         with open(cache_filepath, 'w') as f:
             f.write(json.dumps(data, indent=4))
     return data

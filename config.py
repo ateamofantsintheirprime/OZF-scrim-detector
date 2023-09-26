@@ -3,7 +3,7 @@ import json
 # Could change the directory construction to use os.path.join(folder1, folder2, "")
 
 data_dir                    = "data/"
-secrets_directory           = "secrets/" # not included in filetree
+secrets_directory           = "secrets/" # not included in filetree, must be constructed by user, along with api key file
 resource_directory          = data_dir + "resources/"
 cache_directory             = data_dir + "cache/"
 leagues_directory           = resource_directory + "leagues/"
