@@ -1,8 +1,8 @@
 TO DO LIST:
 
-    1) Hide Private Key in gitignore
+    1) [DONE] Hide Private Key in gitignore
         1.1) Add a template file where others can put their private keys if they want to clone the repo
-    2) Put it on github.
+    2) [DONE] Put it on github.
     3) Add error handling
         (Option 1): Shut down the app when a request fails and give an error message
         (Option 2): Continue when the error is recieved and handle the missing data (risks hammering the API when I'm getting nothing back but errors)
