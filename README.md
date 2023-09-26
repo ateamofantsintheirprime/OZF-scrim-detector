@@ -10,8 +10,7 @@ TO DO LIST:
         4.1) [] Decide on directory system for storing individual logs
             (Option 1): A single folder with every log named by their ID.   (nothing wrong with this)
             (Option 2): A logs folder with subfolders for each team, which then contains the logs. (neater)
-        4.2) [] Add multithreading
-        4.3) [] Add team alignment checking
+        4.2) [] Add multithreaded requests
         
     5) [] Add team alignment checking
     6) [] Add team matchup checking
@@ -25,6 +24,7 @@ TO DO LIST:
     14) [] Get League start and end dates from the that the first and last matches are generated.
         [Note] Sometimes all regular season matches are generated at the start of the league (round robin), and sometimes they are generated week by week. Thankfully Grand-finals are always generated immediately prior to the final week of the season.
         14.1) Different divisions end at different times, make sure we take the date of the latest Grand-finals.
+    15) [] Add checking to the first round of trimming that the log has the correct number of players
 
 NOTES: 
 
