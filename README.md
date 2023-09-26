@@ -16,11 +16,11 @@ TO DO LIST:
     5) [] Add team alignment checking
     6) [] Add team matchup checking
     7) [] Add test cases (no clue)
-    8) [] Make a config.json file that specifies all filepaths and API URL prefixes, and the season IDs / names they are searching.
-    9) [] Put all the locally stored API responses in a single filetree, so they arent just floating around in root.
-    10) [] Add that filetree to .gitignore, no point other people downloading the logs themselves. The application is supposed to find the logs pertaining to any arbitrary season.
+    8) [x] Make a config.json file that specifies all filepaths and API URL prefixes, and the season IDs / names they are searching.
+    9) [x] Put all the cached API responses in a single filetree, so they arent just floating around in root.
+    10) [x] Add that filetree to .gitignore, no point other people downloading the logs themselves. The application is supposed to find the logs pertaining to any arbitrary season.
     11) [] Add checking that the stored files contain valid data, and if not, make the API request and overwrite them.
-    12) [] Restructure datatypes and filetree
+    12) [x] Restructure datatypes and filetree
 
 NOTES: 
 
