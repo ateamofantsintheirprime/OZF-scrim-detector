@@ -38,9 +38,9 @@ class Roster():
 
     def get_roster_data(self):
         print(f"Requesting roster data, id: {self.id}")
-        cache_file = os.path.join(config.roster_response_cache, str(self.id) + ".json")
+        cache_filepath = os.path.join(config.roster_response_cache, str(self.id) + ".json")
         url = os.path.join(config.ozf_url_prefix , "rosters/", str(self.id))
-        data = request(cache_file, url, config.headers)["roster"]
+        data = request(cache_filepath, url, config.headers)["roster"]
         return data
 
     def build_roster_dir(self, league_dir) -> str:
@@ -49,7 +49,7 @@ class Roster():
             os.mkdir(self.roster_dir)
 
     def guess_core_players(self):
-        # get the most common steam ids in logs belonging to this team
+        # TODO get the most common steam ids in logs belonging to this team
         pass
 
     def potential_log_ids(self, count =4):
@@ -72,7 +72,7 @@ class Roster():
         # print(trimmed_logs.keys())
         return trimmed_logs
 
-    def trim_logs(self, potential_logs, count =4):
+    def trim_logs(self, count =4):
         """ Check that there are at least count players
         from this roster on the SAME TEAM in each log.
         This involves requesting each log INDIVIDUALLY"""
@@ -88,7 +88,7 @@ class Player():
         self.name = name
         self.id64 = id64
         self.id3 = id3
-        self.log_ids = []
+        self.log_ids = self.get_log_ids()
 
     def print(self):
         # TODO
@@ -100,22 +100,28 @@ class Player():
         url = config.logs_url_prefix + "?player=" + self.id64
         log_search = request(cache_filepath, url)
         print(f"Was given {log_search['results']} / {log_search['total']} logs that contain player {log_search['parameters']['player']}")
-        self.log_ids = [log['id'] for log in log_search['logs']]
+        return [log['id'] for log in log_search['logs']]
 
 class League():
     def __init__(self, id):
         self.id = id
-        cache_filepath = os.path.join(config.league_response_cache, str(self.id) + ".json")
-        url = os.path.join(config.ozf_url_prefix, "leagues/", str(self.id))
-        data = request(cache_filepath, url, config.headers)["league"]
+        data = self.get_league_data()
 
-        self.path = os.path.join(config.leagues_directory, str(self.id), "")
-        if not os.path.exists(self.path):
-            os.mkdir(self.path)
-
+        # TODO: Get date data
         self.name = data["name"]
         self.rosters = self.get_rosters(data["rosters"])
 
     def get_rosters(self, rosters):
         roster_ids = [roster["id"] for roster in rosters]
         self.rosters = [Roster(id, self.path) for id in roster_ids]
+
+    def build_league_dir(self):
+        self.path = os.path.join(config.leagues_directory, str(self.id), "")
+        if not os.path.exists(self.path):
+            os.mkdir(self.path)
+
+    def get_league_data(self):
+        print(f"Requesting league data, id: {self.id}")
+        cache_filepath = os.path.join(config.league_response_cache, str(self.id) + ".json")
+        url = os.path.join(config.ozf_url_prefix, "leagues/", str(self.id))
+        return request(cache_filepath, url, config.headers)["league"]
