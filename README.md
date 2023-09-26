@@ -21,14 +21,13 @@ TO DO LIST:
     10) [x] Add that filetree to .gitignore, no point other people downloading the logs themselves. The application is supposed to find the logs pertaining to any arbitrary season.
     11) [] Add checking that the stored files contain valid data, and if not, make the API request and overwrite them.
     12) [x] Restructure datatypes and filetree
+    13) [] Replace resources filetree with a proper DB
 
 NOTES: 
 
-- Logs that pass the first round of trimming but not the second round will still be stored locally. It would be a not insignificant amount of work to avoid this. I wouldn't be able to use the basic make_request() function for it.
+- Logs that pass the first round of trimming but not the second round will still be cached. It would be a not insignificant amount of work to avoid this. I wouldn't be able to use the basic make_request() function for it. Probably best to not try avoid it.
 
 - When tackling multiple seasons, the start and end date of the season need to be considered, along side the date that the scrim was played. If a team keeps an identical roster between subsequent seasons, where do you draw the line between the scrims being allocated to the first season's roster or the second season's roster.
-
-- Mercs? unavoidable confusion I think
 
 - Consider how transfers should be handled? Are they recorded in the ozf API? if 2 core players are transferred out of a roster mid season, then post-transfer logs would not be detected properly
 
