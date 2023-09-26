@@ -16,7 +16,8 @@ TO DO LIST:
     5) Add team alignment checking
     6) Add team matchup checking
     7) Add test cases (no clue)
-    8) Make a config.json file that specifies all filepaths and API URL prefixes
+    8) Make a config.json file that specifies all filepaths and API URL prefixes, and the season IDs / names they are searching.
+    9) Add the locally stored API responses to .gitignore, no point other people downloading the logs themselves. The application is supposed to find the logs pertaining to any arbitrary season.
 
 NOTES: 
 
