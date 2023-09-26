@@ -28,7 +28,7 @@ class Roster():
 
         request_progress = 0
         for player in self.players: # Get last 1k logs of each player on the self.
-            print(f"Making log request:{request_progress}/{len(self.players)}\n\tRoster id:{self.id}\n\tID64:{player.id64}\n\tName:{player.name}")
+            print(f"Making log request:{request_progress}/{len(self.players)}\n\tRoster id:{self.id}\n\tRoster name:{self.name}\n\tID64:{player.id64}\n\tName:{player.name}")
             player.get_log_ids()
             request_progress += 1
 
@@ -60,16 +60,16 @@ class Roster():
         for player in self.players:
             for id in player.log_ids:
                 if id in log_count.keys():
-                    log_count[id].append(player)
+                    log_count[id].append(player.name)
                 else:
-                    log_count[id] = [player]
+                    log_count[id] = [player.name]
         trimmed_logs = {} # we could just delete from the old dict
         for id in log_count.keys():
             if len(log_count[id]) >= count:
                 trimmed_logs[id] = log_count[id]
-        # print(f"Roster id:{self.id}, Trimmed logs:")
-        # pprint(trimmed_logs)
-        # print(trimmed_logs.keys())
+        print(f"Roster id:{self.id}, Trimmed logs:")
+        pprint(trimmed_logs)
+        print(trimmed_logs.keys())
         return trimmed_logs
 
     def trim_logs(self, count =4):
@@ -106,10 +106,15 @@ class League():
     def __init__(self, id):
         self.id = id
         data = self.get_league_data()
-
+        self.build_league_dir()
         # TODO: Get date data
         self.name = data["name"]
-        self.rosters = self.get_rosters(data["rosters"])
+        self.get_rosters(data["rosters"])
+
+        count = 0
+        for roster in self.rosters:
+            count += len(roster.logs)
+        print(f"TOTAL LOG REQUESTS NEEDED: {count}")
 
     def get_rosters(self, rosters):
         roster_ids = [roster["id"] for roster in rosters]
