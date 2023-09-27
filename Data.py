@@ -24,7 +24,7 @@ def request(cache_filepath, url, headers = {}):
     If not, then request that data from the url.
     Take the data from the request, sanitise it and format it.
     Store that data in a file in the cache.
-    Return the data as a JSON Object. """
+    Return the data as a JSON Object."""
     data = None
         # Check if we already have the requested data stored in the cache
     if os.path.isfile(cache_filepath):

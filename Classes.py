@@ -130,3 +130,7 @@ class League():
         cache_filepath = os.path.join(config.league_response_cache, str(self.id) + ".json")
         url = os.path.join(config.ozf_url_prefix, "leagues/", str(self.id))
         return request(cache_filepath, url, config.headers)["league"]
+
+    def get_dates(self):
+        #TODO 
+        pass
