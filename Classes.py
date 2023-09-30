@@ -1,4 +1,4 @@
-import os.path, config
+import os.path, Config
 from Log import MiniLog, FullLog
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
@@ -39,8 +39,8 @@ class Roster():
 
     def get_logs_parallel(self):
         print(f"Parrallelised request for logs of roster : {self.id}, {self.name}")
-        cache_filepath_prefix = config.log_cache
-        url_prefix = config.logs_url_prefix + "/"
+        cache_filepath_prefix = Config.log_cache
+        url_prefix = Config.logs_url_prefix + "/"
         ids = [str(id) for id in self.potential_logs.keys()]
         batch = request_batch(cache_filepath_prefix, url_prefix, ids)
         self.logs = []
@@ -61,8 +61,8 @@ class Roster():
     #     # pprint(self.potential_logs)
     #     for id in self.potential_logs.keys():
     #         print(f"Requesting log: {progress} / {len(self.potential_logs)}", end = '\r')
-    #         cache_filepath = os.path.join(config.log_cache, str(id) + ".json")
-    #         url = config.logs_url_prefix + "/" + str(id)
+    #         cache_filepath = os.path.join(Config.log_cache, str(id) + ".json")
+    #         url = Config.logs_url_prefix + "/" + str(id)
     #         log = request_safe(cache_filepath, url)
     #         # print(f"Recieved log: {id}")
     #         self.logs[id] = log
@@ -73,9 +73,9 @@ class Roster():
 
     def get_roster_data(self):
         print(f"Requesting roster data, id: {self.id}")
-        cache_filepath = os.path.join(config.roster_response_cache, str(self.id) + ".json")
-        url = os.path.join(config.ozf_url_prefix , "rosters/", str(self.id))
-        data = request_safe(cache_filepath, url, config.headers)["roster"]
+        cache_filepath = os.path.join(Config.roster_response_cache, str(self.id) + ".json")
+        url = os.path.join(Config.ozf_url_prefix , "rosters/", str(self.id))
+        data = request_safe(cache_filepath, url, Config.headers)["roster"]
         return data
 
     def build_roster_dir(self, league_dir) -> str:
@@ -137,8 +137,8 @@ class Player():
 
     def get_minilogs(self):
         # print(f"Requesting Player: <{self.name}>, log search")
-        cache_filepath = os.path.join(config.player_log_search_cache, self.id64 + ".json")
-        url = config.logs_url_prefix + "?player=" + self.id64
+        cache_filepath = os.path.join(Config.player_log_search_cache, self.id64 + ".json")
+        url = Config.logs_url_prefix + "?player=" + self.id64
         log_search = request_safe(cache_filepath, url)
         # print(f"Was given {log_search['results']} / {log_search['total']} logs that contain player {log_search['parameters']['player']}")
         return [MiniLog(log) for log in log_search['logs']]
@@ -164,16 +164,16 @@ class League():
         return [Roster(id, self.path, self.start_date, self.end_date) for id in roster_ids]
 
     def build_league_dir(self):
-        path = os.path.join(config.leagues_directory, str(self.id), "")
+        path = os.path.join(Config.leagues_directory, str(self.id), "")
         if not os.path.exists(path):
             os.mkdir(path)
         return path
 
     def get_league_data(self):
         print(f"Requesting league data, id: {self.id}")
-        cache_filepath = os.path.join(config.league_response_cache, str(self.id) + ".json")
-        url = os.path.join(config.ozf_url_prefix, "leagues/", str(self.id))
-        return request_safe(cache_filepath, url, config.headers)["league"]
+        cache_filepath = os.path.join(Config.league_response_cache, str(self.id) + ".json")
+        url = os.path.join(Config.ozf_url_prefix, "leagues/", str(self.id))
+        return request_safe(cache_filepath, url, Config.headers)["league"]
 
     def get_dates(self, match_list):
         #TODO 
