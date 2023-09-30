@@ -42,6 +42,22 @@ TO DO LIST:
     
     18) Add a script that looks through the last like 20 leagues and sees if any of them have overlap in match dates, if not maybe we can just assume that it won't happen (doubtful).
 
+    19) Store teams and players in the resource filetree
+    
+    20) Clean up and organise this todo list
+
+    21) Extricate processes from construction, so that the program can be tested more easily.
+        21.1) E.g. Simply initialising a league doesn't necesarily mean making API requests and initialising all respective teams and players.
+        21.2) The entire program shouldn't be run through constructors.
+    
+    22) Check back in on the cursed unicode filtering function
+
+    23) Set up a debug toggle that prints all the detailed info. When this is toggled off just report the data. Maybe set up multiple modes so you can select what data gets printed.
+
+    24) Set up the request_safe backoff time to scale based on repeated failures (across the whole threadpool)
+
+    25) Use consistent capitalisation on file names lol
+
 NOTES: 
 
 - ALL API responses are cached, regardless of whether or not they contain any information that is used by the program. Not really a simple or neccessary 'problem' to fix. Only solution I can think of is to delete irrelevant API caches, and then add them to a 'blacklist' so the program remembers that the data is irrelevant and doesn't request it again.
@@ -51,6 +67,8 @@ NOTES:
 - Consider how transfers should be handled? Are they recorded in the ozf API? if 2 core players are transferred out of a roster mid season, then post-transfer logs would not be detected properly
 
 - Consider how to calculate start and end dates for seasons. What about when seasons overlap? Two 6s seasons will never overlap and the same goes for two highlander seasons. But you may find a team that is signed up for a 6s season, and a very similar but distinct (3-5 players in common) team that is playing in a simultaneously running 6s cup.  
+
+- Consider how to calculate start and end dates for seasons still in progress.
 
 - It would be really nice if the dates of each league start and end, along with the date that match scores were submitted, was accessible in the API. 
 

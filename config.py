@@ -31,7 +31,7 @@ logs_url_prefix             = "http://logs.tf/api/v1/log"
 
 recent_season_ids           = [56] # These seasons will be searched
 
-headers = CaseInsensitiveDict()
 with open(ozf_api_key, "r") as f:
     key = json.loads(f.read())["key"]
+headers = CaseInsensitiveDict()
 headers["X-API-Key"] = key
