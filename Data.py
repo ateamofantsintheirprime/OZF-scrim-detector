@@ -1,5 +1,5 @@
 import os.path, json, requests, re
-from time import sleep
+from time import sleep, time
 from concurrent.futures import ThreadPoolExecutor
 from pprint import pprint
 
@@ -9,6 +9,25 @@ class RequestFailedError(Exception):
 class APIOverloadError(Exception):
     "Raised when a request fails after 10 retries"
     pass
+
+
+# maximum number of requests over the request_period
+max_rate = 15
+# period in seconds for measuring request rate
+request_period = 30
+# list of timestamps for requests made
+request_log = []
+
+
+def request_rate():
+    """
+    Gives the number of requests made over the given number of seconds. Deletes records older than this.
+    """
+    global request_log
+    expired_at = time() - request_period
+    request_log = [t for t in request_log if t > expired_at]
+    return len(request_log)
+
 
 # update this docstring
 def request_batch(cache_filepath_prefix, url_prefix : str, url_ids : list, headers = {}) -> list:
@@ -88,6 +107,12 @@ def request(cache_filepath, url, headers = {}):
             from_cache = True
             # TODO: Check if file is healthy, if not, then replace it.
     else:
+        nap_time = 1
+        while request_rate() > max_rate:
+            # print(f"sleeping {nap_time}s ...")
+            sleep(nap_time)
+            nap_time *= 2
+        request_log.append(time())
         # Make API request
         # print(f"Making request for url: {url}")
         resp = requests.get(url, headers=headers)
