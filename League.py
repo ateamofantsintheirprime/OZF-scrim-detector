@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pprint import pprint
 from Data import request_safe
 from Roster import Roster
+from Matchups import Matchup
 
 class League():
     def __init__(self, id):
@@ -17,6 +18,8 @@ class League():
         self.end_date = dates["end date"]
         # print("dates:", self.start_date.strftime("%d/%m/%Y"), self.end_date.strftime("%d/%m/%Y"))
         self.rosters = self.get_rosters(data["rosters"])
+        self.init_rosters_parallel()
+        self.identify_matchups()
         # count = 0
         # for roster in self.rosters:
         #     count += len(roster.potential_logs)
@@ -26,11 +29,37 @@ class League():
         roster_ids = [roster["id"] for roster in rosters]
         return [Roster(id, self.path, self.start_date, self.end_date) for id in roster_ids]
 
+    def init_rosters(self):
+        for roster in self.rosters:
+            roster.init()
+
+    def init_single_roster(self, roster):
+        roster.init()
+
+    def init_rosters_parallel(self):
+        max_concurrent = 10
+        with ThreadPoolExecutor(max_concurrent) as executor:
+            results = executor.map(self.init_single_roster, self.rosters)
+
+
     def build_league_dir(self):
         path = os.path.join(Config.leagues_directory, str(self.id), "")
         if not os.path.exists(path):
             os.mkdir(path)
         return path
+
+    def identify_matchups(self):
+        self.matchups = []
+        log_matchups = {}
+        for roster in self.rosters:
+            for log in roster.logs:
+                if not log.id in log_matchups.keys():
+                    log_matchups[log.id] = {"log": log, "rosters" : [roster]}
+                else:
+                    log_matchups[log.id]["rosters"].append(roster)
+        for matchup in log_matchups:
+            self.matchups.append(Matchup(matchup["rosters"], matchup["log"]))
+        pprint(log_matchups)
 
     def get_league_data(self):
         print(f"Requesting league data, id: {self.id}")

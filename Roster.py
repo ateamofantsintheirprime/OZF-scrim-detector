@@ -6,7 +6,7 @@ from Log import FullLog
 class Roster():
     def __init__(self, id, league_dir, league_start_date, league_end_date):
         self.id = id
-        self.logs = {}
+        self.logs = []
         self.roster_dir = self.build_roster_dir(league_dir)
         self.start_date = league_start_date
         self.end_date = league_end_date
@@ -18,7 +18,7 @@ class Roster():
         self.name = data["name"]
         self.players = []
 
-        request_progress = 0
+        # request_progress = 0
         for player in data["players"]:
             ozfid = player["id"]
             id64 = player["steam_64_str"]
@@ -27,13 +27,20 @@ class Roster():
             new_player = Player(id64, id3,ozfid, name)
             self.players.append(new_player)
             # print(f"Constructing Player: {request_progress}/{len(data['players'])}\n\tRoster id: {self.id}\n\tRoster name: {self.name}\n\tID64: {new_player.id64}\n\tName: {new_player.name}")
-            request_progress += 1
+            # request_progress += 1
 
+        print(f"Team:\n\tname:{self.name}\n\troster id:{self.id}")
+
+    def init(self):
+        print("Initialising player logs")
+        for player in self.players:
+            player.update_minilogs()
+        print("Gathering team logs")
         self.potential_logs = self.get_potential_logs()
         # self.get_logs()
         self.get_logs_parallel()
-        print(f"Team:\n\tname:{self.name}\n\troster id:{self.id}")
         print(f"\tlogs:{[log.id for log in self.logs]}")
+
 
     def get_logs_parallel(self):
         print(f"Parrallelised request for logs of roster : {self.id}, {self.name}")
@@ -47,27 +54,6 @@ class Roster():
         # self.logs = [FullLog(log_data) for log_data in batch]
         self.trim_logs()
 
-
-    # def get_logs(self):
-    #     """ Check that there are at least count players
-    #     from this roster on the SAME TEAM in each log.
-    #     This involves requesting each log INDIVIDUALLY"""
-
-    #     print(f"Requesting logs for roster: {self.id}, {self.name}")
-
-    #     progress = 0
-    #     # pprint(self.potential_logs)
-    #     for id in self.potential_logs.keys():
-    #         print(f"Requesting log: {progress} / {len(self.potential_logs)}", end = '\r')
-    #         cache_filepath = os.path.join(Config.log_cache, str(id) + ".json")
-    #         url = Config.logs_url_prefix + "/" + str(id)
-    #         log = request_safe(cache_filepath, url)
-    #         # print(f"Recieved log: {id}")
-    #         self.logs[id] = log
-    #         progress += 1
-
-    #     print(f"PRETRIM:\n\t{len(self.logs)} Logs associated with team:\n\tTeam id: {self.id}\n\tTeam name: {self.name}")
-    #     # self.trim_logs()
 
     def get_roster_data(self):
         print(f"Requesting roster data, id: {self.id}")
@@ -130,3 +116,26 @@ class Roster():
     def print(self):
         # TODO
         pass
+
+
+
+    # def get_logs(self):
+    #     """ Check that there are at least count players
+    #     from this roster on the SAME TEAM in each log.
+    #     This involves requesting each log INDIVIDUALLY"""
+
+    #     print(f"Requesting logs for roster: {self.id}, {self.name}")
+
+    #     progress = 0
+    #     # pprint(self.potential_logs)
+    #     for id in self.potential_logs.keys():
+    #         print(f"Requesting log: {progress} / {len(self.potential_logs)}", end = '\r')
+    #         cache_filepath = os.path.join(Config.log_cache, str(id) + ".json")
+    #         url = Config.logs_url_prefix + "/" + str(id)
+    #         log = request_safe(cache_filepath, url)
+    #         # print(f"Recieved log: {id}")
+    #         self.logs[id] = log
+    #         progress += 1
+
+    #     print(f"PRETRIM:\n\t{len(self.logs)} Logs associated with team:\n\tTeam id: {self.id}\n\tTeam name: {self.name}")
+    #     # self.trim_logs()
