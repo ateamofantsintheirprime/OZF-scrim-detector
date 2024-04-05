@@ -27,6 +27,11 @@ TO DO LIST:
 
     11) Break down scrims by team by season and by opponent
 
+    12) Add an expiry date to the cached responses, so the program will periodically go back and "check" that the response hasnt changed
+
+    13) Make it scrape the html for the match comms to see if logs were posted for a more accurate estimate of match dates.
+
+
 NOTES: 
 
 - Consider how transfers should be handled? Are they recorded in the ozf API? if 2 core players are transferred out of a roster mid season, then post-transfer logs would not be detected properly

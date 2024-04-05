@@ -15,6 +15,7 @@ class League():
         dates = self.get_dates(data["matches"])
         self.start_date = dates["start date"]
         self.end_date = dates["end date"]
+        # print("dates:", self.start_date.strftime("%d/%m/%Y"), self.end_date.strftime("%d/%m/%Y"))
         self.rosters = self.get_rosters(data["rosters"])
         # count = 0
         # for roster in self.rosters:

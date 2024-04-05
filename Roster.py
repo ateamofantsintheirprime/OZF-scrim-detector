@@ -106,16 +106,26 @@ class Roster():
         # print(trimmed_logs.keys())
         return logs
 
-    def trim_logs(self, count =4):
+    def trim_logs(self, player_threshhold =4):
         trimmed_logs = []
         for log in self.logs:
             red_count = len([player.id3 for player in self.players if player.id3 in log.red_team])
             blue_count = len([player.id3 for player in self.players if player.id3 in log.blue_team])
 
-            if red_count > count or blue_count > count:
+            if red_count > player_threshhold or blue_count > player_threshhold:
                 trimmed_logs.append(log)
 
+        # filters out non-sixes logs
+        trimmed_logs = self.only_sixes(trimmed_logs)
+
         self.logs = trimmed_logs
+
+    def only_sixes(self, logs):
+        trimmed_logs = []
+        for log in logs:
+            if abs(len(log.red_team) - 6) <= 1 and abs(len(log.blue_team) - 6) <= 1:
+                trimmed_logs.append(log)
+        return trimmed_logs
 
     def print(self):
         # TODO
