@@ -5,12 +5,12 @@ TO DO LIST:
 
     2) [] Add test cases (no clue)
 
-    3) [] Get League start and end dates from the that the first and last matches are generated.
+    3) [DONE] [check how accurate this estimation is] Get League start and end dates from the that the first and last matches are generated.
 
-    4) [] Add checks to the first round of trimming that the log has the correct number of players. 
-        4.1) Eventually check the gamemode directly when reading the log individually
+    4) [DONE] Add checks to the first round of trimming that the log has the correct number of players. 
+        4.1) [NOT DONE] Eventually check the gamemode directly when reading the log individually (how does logs.tf get the gamemode?)
 
-    5) Extricate processes from construction, so that the program can be run with more granularity, and tested more easily.
+    5) Extricate processes from construction, so that the program can be run with more granularity, and tested more easily (HIGH PRIORITY).
         5.1) E.g. Simply initialising a league doesn't necesarily mean making API requests and initialising all respective teams and players.
         5.2) The entire program shouldn't be run through constructors.
         5.3) You should be able to easily get the logs of just one team. Or some number of teams, or just one player.
