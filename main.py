@@ -1,6 +1,6 @@
 import os.path
 from Config import recent_season_ids, filetree
-from Classes import League
+from League import League
 
 # Construct Filetree
 
