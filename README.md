@@ -21,6 +21,12 @@ TO DO LIST:
 
     8) Set up the request_safe backoff time to scale exponentially based on repeated failures (across the whole threadpool)
 
+    9) Figure out if the resources directory actually is useable for anything
+
+    10) Get info on how much the trimming stage reduces the log list
+
+    11) Break down scrims by team by season and by opponent
+
 NOTES: 
 
 - Consider how transfers should be handled? Are they recorded in the ozf API? if 2 core players are transferred out of a roster mid season, then post-transfer logs would not be detected properly
