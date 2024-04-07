@@ -35,6 +35,8 @@ TO DO LIST:
 
     15) make it properly record scrim results in json files, with full season breakdowns, team/roster breakdowns and player breakdowns
 
+    16) make it so you can provide any arbitrary log and it will tell u if it's two teams from some ozf season, and if so, which season
+
 
 NOTES: 
 
