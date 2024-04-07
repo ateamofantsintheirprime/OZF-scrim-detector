@@ -19,7 +19,7 @@ TO DO LIST:
 
     7) Set up a debug toggle that prints all the detailed info. When this is toggled off just report the data. Maybe set up multiple modes so you can select what data gets printed.
 
-    8) Set up the request_safe backoff time to scale exponentially based on repeated failures (across the whole threadpool)
+    8) Set up the request_safe backoff time to scale exponentially based on repeated failures (across the whole threadpool) (make each thread wait a random few seconds before starting to request from the api so it doesn't abruptly make 10 requests at once when starting)
 
     9) Figure out if the resources directory actually is useable for anything
 
@@ -30,6 +30,10 @@ TO DO LIST:
     12) Add an expiry date to the cached responses, so the program will periodically go back and "check" that the response hasnt changed
 
     13) Make it scrape the html for the match comms to see if logs were posted for a more accurate estimate of match dates.
+
+    14) write actual test cases by collecting a bunch of scrim logs between teams and seeing if the program is able to find them
+
+    15) make it properly record scrim results in json files, with full season breakdowns, team/roster breakdowns and player breakdowns
 
 
 NOTES: 
