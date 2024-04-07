@@ -31,7 +31,7 @@ TO DO LIST:
 
     13) Make it scrape the html for the match comms to see if logs were posted for a more accurate estimate of match dates.
 
-    14) write actual test cases by collecting a bunch of scrim logs between teams and seeing if the program is able to find them
+    14) write actual test cases by collecting a bunch of scrim logs between teams and seeing if the program is able to find them (use officials they will be easiest to find)
 
     15) make it properly record scrim results in json files, with full season breakdowns, team/roster breakdowns and player breakdowns
 
