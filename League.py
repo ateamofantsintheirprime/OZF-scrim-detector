@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pprint import pprint
 from Data import request_safe
 from Roster import Roster
-from Matchups import Matchup
+from Matchups import Matchup, PugTeam
 
 class League():
     def __init__(self, id):
@@ -13,6 +13,7 @@ class League():
         self.path = self.build_league_dir()
         # TODO: Get date data
         self.name = data["name"]
+        print("season name:", self.name)
         dates = self.get_dates(data["matches"])
         self.start_date = dates["start date"]
         self.end_date = dates["end date"]
@@ -20,6 +21,7 @@ class League():
         self.rosters = self.get_rosters(data["rosters"])
         self.init_rosters_parallel()
         self.identify_matchups()
+        self.print_matchups()
         # count = 0
         # for roster in self.rosters:
         #     count += len(roster.potential_logs)
@@ -52,14 +54,61 @@ class League():
         self.matchups = []
         log_matchups = {}
         for roster in self.rosters:
-            for log in roster.logs:
+            for log_side in roster.logs:
+                log = log_side["log"]
+                side = log_side["side"]
                 if not log.id in log_matchups.keys():
-                    log_matchups[log.id] = {"log": log, "rosters" : [roster]}
+                    log_matchups[log.id] = {"log": log, "rosters" : [(roster, side)]}
                 else:
-                    log_matchups[log.id]["rosters"].append(roster)
-        for matchup in log_matchups:
+                    log_matchups[log.id]["rosters"].append((roster, side))
+        for log_id in log_matchups.keys():
+            matchup = log_matchups[log_id]
             self.matchups.append(Matchup(matchup["rosters"], matchup["log"]))
-        pprint(log_matchups)
+        
+        for log_id in log_matchups.keys():
+            matchup = log_matchups[log_id]
+            blue_team = []
+            red_team = []
+            for team in match["rosters"]:
+                if team[1] == 0:
+                    red_team.append(team[0])
+                else:
+                    blue_team.append(team[0])
+            assert len(self.blue_team) <= 1
+            assert len(self.red_team) <= 1
+            assert len(self.blue_team) + len(self.red_team) > 0
+
+        # for m in self.matchups:
+        #     print("blue team:", m.blue_team.name)
+        #     print("red team:", m.red_team.name)
+        #     print("result:", m.result)
+        #     print("============")
+
+    def print_matchups(self):
+        for team in self.rosters:
+            team_matchups = []
+            pugscrim_matchups = []
+            for matchup in self.matchups:
+                if matchup.blue_team == team:
+                    result = (matchup.result[1], matchup.result[0]) # reverse it cos it should be from the perspective of this team
+                    m = {"opponent": matchup.red_team.name, "score" : result, "log_id" : matchup.log.id}
+                    if isinstance(matchup.red_team, PugTeam):
+                        pugscrim_matchups.append(m)
+                    else:
+                        team_matchups.append(m)
+                if matchup.red_team == team:
+                    m = {"opponent": matchup.blue_team.name, "score" : matchup.result, "log_id" : matchup.log.id}
+
+                    if isinstance(matchup.blue_team, PugTeam):
+                        pugscrim_matchups.append(m)
+                    else:
+                        team_matchups.append(m)
+
+            print(f"name: {team.name} [id: {team.id}] Scrims:")
+            print("team matchups:")
+            pprint(team_matchups)
+            print("pugscrims:")
+            pprint(pugscrim_matchups)
 
     def get_league_data(self):
         print(f"Requesting league data, id: {self.id}")

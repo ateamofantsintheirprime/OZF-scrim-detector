@@ -31,6 +31,12 @@ TO DO LIST:
 
     13) Make it scrape the html for the match comms to see if logs were posted for a more accurate estimate of match dates.
 
+    14) Build a UI
+
+    15) Let people manually input rosters from lists of players or ozf team pages and optional date ranges so they can look at scrim results from preseason / no particular season 
+
+    16) Prioritising logs that are expected to feature multiple teams before the full log is requested from logs.tf
+
 
 NOTES: 
 

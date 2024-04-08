@@ -2,6 +2,14 @@ import os, Config
 from Data import request_batch, request_safe
 from Player import Player
 from Log import FullLog
+from pprint import pprint
+
+
+class Matchup():
+    def __init__(self):
+        self.url
+        self.opponent
+        self.score
 
 class Roster():
     def __init__(self, id, league_dir, league_start_date, league_end_date):
@@ -94,15 +102,18 @@ class Roster():
 
     def trim_logs(self, player_threshhold =4):
         trimmed_logs = []
+        # filters out non-sixes logs
+        trimmed_logs = self.only_sixes(trimmed_logs)
+
         for log in self.logs:
             red_count = len([player.id3 for player in self.players if player.id3 in log.red_team])
             blue_count = len([player.id3 for player in self.players if player.id3 in log.blue_team])
 
-            if red_count > player_threshhold or blue_count > player_threshhold:
-                trimmed_logs.append(log)
+            if red_count > player_threshhold:
+                trimmed_logs.append({"log" : log, "side": 0})
+            elif blue_count > player_threshhold:
+                trimmed_logs.append({"log" : log, "side": 1})
 
-        # filters out non-sixes logs
-        trimmed_logs = self.only_sixes(trimmed_logs)
 
         self.logs = trimmed_logs
 
