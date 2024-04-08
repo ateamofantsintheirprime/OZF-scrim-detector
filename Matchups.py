@@ -1,19 +1,34 @@
 class Matchup():
     def __init__(self, teams, log):
 
-        self.blue_team
-        self.red_team
+        self.blue_team = []
+        self.red_team = []
+        self.log = log
 
         self.result = log.score
-        player_threshhold = 4
-        for roster in teams:
-            red_count = len([player.id3 for player in roster.players if player.id3 in log.red_team])
-            blue_count = len([player.id3 for player in roster.players if player.id3 in log.blue_team])
 
-            if red_count > blue_count:
-                self.red_team = roster
+        for team in teams:
+            if team[1] == 0:
+                self.red_team.append(team[0])
             else:
-                self.blue_team = roster
+                self.blue_team.append(team[0])
+        assert len(self.blue_team) <= 1
+        assert len(self.red_team) <= 1
+        assert len(self.blue_team) + len(self.red_team) > 0
+
+        if len(self.blue_team) == 0:
+            self.blue_team = PugTeam(log.blue_team)
+        else:
+            self.blue_team = self.blue_team[0]
+
+        if len(self.red_team) == 0:
+            self.red_team = PugTeam(log.red_team)
+        else:
+            self.red_team = self.red_team[0]
+
+
 class PugTeam():
-    def __init__(self, players):
-        self.players = players
+    def __init__(self, player_id3s):
+        self.id = 0
+        self.name = "unnamed"
+        self.players = player_id3s

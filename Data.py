@@ -99,6 +99,7 @@ def request(cache_filepath, url, headers = {}):
         code = resp.status_code
         with open(cache_filepath, 'w') as f:
             f.write(json.dumps(data, indent=4))
+    # print(f"\tSUCCESSFUL REQUEST")
     return {"success": True, "code": code, "from_cache": from_cache, "data": data}
 
 def expunge_unicode(text):

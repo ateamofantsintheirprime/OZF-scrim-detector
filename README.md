@@ -31,11 +31,17 @@ TO DO LIST:
 
     13) Make it scrape the html for the match comms to see if logs were posted for a more accurate estimate of match dates.
 
-    14) write actual test cases by collecting a bunch of scrim logs between teams and seeing if the program is able to find them (use officials they will be easiest to find)
+    14) Build a UI
 
-    15) make it properly record scrim results in json files, with full season breakdowns, team/roster breakdowns and player breakdowns
+    15) Let people manually input rosters from lists of players or ozf team pages and optional date ranges so they can look at scrim results from preseason / no particular season 
 
-    16) make it so you can provide any arbitrary log and it will tell u if it's two teams from some ozf season, and if so, which season
+    16) Prioritising logs that are expected to feature multiple teams before the full log is requested from logs.tf
+
+    17) write actual test cases by collecting a bunch of scrim logs between teams and seeing if the program is able to find them (use officials they will be easiest to find)
+
+    18) make it properly record scrim results in json files, with full season breakdowns, team/roster breakdowns and player breakdowns
+
+    19) make it so you can provide any arbitrary log and it will tell u if it's two teams from some ozf season, and if so, which season
 
 
 NOTES: 
