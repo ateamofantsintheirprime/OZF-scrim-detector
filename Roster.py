@@ -1,4 +1,4 @@
-import os, Config
+import os, config
 from Data import request_batch, request_safe
 from Player import Player
 from Log import FullLog
@@ -21,6 +21,7 @@ class Roster():
         
         # Make request for roster data
         data = self.get_roster_data()
+        self.data = data
 
         # Store roster data
         self.name = data["name"]
@@ -38,6 +39,7 @@ class Roster():
             # request_progress += 1
 
         print(f"Team:\n\tname:{self.name}\n\troster id:{self.id}")
+        self.get_official_matches()
 
     def init(self):
         print("Initialising player logs")
@@ -52,8 +54,8 @@ class Roster():
 
     def get_logs_parallel(self):
         print(f"Parrallelised request for logs of roster : {self.id}, {self.name}")
-        cache_filepath_prefix = Config.log_cache
-        url_prefix = Config.logs_url_prefix + "/"
+        cache_filepath_prefix = config.log_cache
+        url_prefix = config.logs_url_prefix + "/"
         ids = [str(id) for id in self.potential_logs.keys()]
         batch = request_batch(cache_filepath_prefix, url_prefix, ids)
         self.logs = []
@@ -65,9 +67,9 @@ class Roster():
 
     def get_roster_data(self):
         print(f"Requesting roster data, id: {self.id}")
-        cache_filepath = os.path.join(Config.roster_response_cache, str(self.id) + ".json")
-        url = os.path.join(Config.ozf_url_prefix , "rosters/", str(self.id))
-        data = request_safe(cache_filepath, url, Config.headers)["roster"]
+        cache_filepath = os.path.join(config.roster_response_cache, str(self.id) + ".json")
+        url = os.path.join(config.ozf_url_prefix , "rosters/", str(self.id))
+        data = request_safe(cache_filepath, url, config.headers)["roster"]
         return data
 
     def build_roster_dir(self, league_dir) -> str:
@@ -128,6 +130,23 @@ class Roster():
         # TODO
         pass
 
+    def get_official_matches(self):
+        print("DATA:")
+        """ Request info for each match associated with that roster for the season. 
+        We want to create a "guess" as to which logs are for which matches.
+        The info we know for sure: 
+            - what map we're looking for
+            - what teams we're looking for
+            - what the scoreline was 
+            - if it DID go to golden cap
+            - (we cant always say that the match DIDNT go to gc)
+        The info we can approximate:
+            - What teams are present in what logs
+            - Around about what dates we expect the match to be played
+                (What if they get an extension?)
+        """
+
+        pprint(self.data)
 
 
     # def get_logs(self):
@@ -141,12 +160,13 @@ class Roster():
     #     # pprint(self.potential_logs)
     #     for id in self.potential_logs.keys():
     #         print(f"Requesting log: {progress} / {len(self.potential_logs)}", end = '\r')
-    #         cache_filepath = os.path.join(Config.log_cache, str(id) + ".json")
-    #         url = Config.logs_url_prefix + "/" + str(id)
+    #         cache_filepath = os.path.join(config.log_cache, str(id) + ".json")
+    #         url = config.logs_url_prefix + "/" + str(id)
     #         log = request_safe(cache_filepath, url)
     #         # print(f"Recieved log: {id}")
     #         self.logs[id] = log
     #         progress += 1
 
     #     print(f"PRETRIM:\n\t{len(self.logs)} Logs associated with team:\n\tTeam id: {self.id}\n\tTeam name: {self.name}")
+
     #     # self.trim_logs()

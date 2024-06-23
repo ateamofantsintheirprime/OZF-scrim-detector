@@ -1,4 +1,4 @@
-import os.path, Config
+import os.path, config
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from pprint import pprint
@@ -45,7 +45,7 @@ class League():
 
 
     def build_league_dir(self):
-        path = os.path.join(Config.leagues_directory, str(self.id), "")
+        path = os.path.join(config.leagues_directory, str(self.id), "")
         if not os.path.exists(path):
             os.mkdir(path)
         return path
@@ -65,24 +65,24 @@ class League():
             matchup = log_matchups[log_id]
             self.matchups.append(Matchup(matchup["rosters"], matchup["log"]))
         
-        for log_id in log_matchups.keys():
-            matchup = log_matchups[log_id]
-            blue_team = []
-            red_team = []
-            for team in match["rosters"]:
-                if team[1] == 0:
-                    red_team.append(team[0])
-                else:
-                    blue_team.append(team[0])
-            assert len(self.blue_team) <= 1
-            assert len(self.red_team) <= 1
-            assert len(self.blue_team) + len(self.red_team) > 0
+        # for log_id in log_matchups.keys():
+        #     matchup = log_matchups[log_id]
+        #     blue_team = []
+        #     red_team = []
+        #     for team in matchup["rosters"]:
+        #         if team[1] == 0:
+        #             red_team.append(team[0])
+        #         else:
+        #             blue_team.append(team[0])
+        #     assert len(self.blue_team) <= 1
+        #     assert len(self.red_team) <= 1
+        #     assert len(self.blue_team) + len(self.red_team) > 0
 
-        # for m in self.matchups:
-        #     print("blue team:", m.blue_team.name)
-        #     print("red team:", m.red_team.name)
-        #     print("result:", m.result)
-        #     print("============")
+        for m in self.matchups:
+            print("blue team:", m.blue_team.name)
+            print("red team:", m.red_team.name)
+            print("result:", m.result)
+            print("============")
 
     def print_matchups(self):
         for team in self.rosters:
@@ -112,9 +112,9 @@ class League():
 
     def get_league_data(self):
         print(f"Requesting league data, id: {self.id}")
-        cache_filepath = os.path.join(Config.league_response_cache, str(self.id) + ".json")
-        url = os.path.join(Config.ozf_url_prefix, "leagues/", str(self.id))
-        return request_safe(cache_filepath, url, Config.headers)["league"]
+        cache_filepath = os.path.join(config.league_response_cache, str(self.id) + ".json")
+        url = os.path.join(config.ozf_url_prefix, "leagues/", str(self.id))
+        return request_safe(cache_filepath, url, config.headers)["league"]
 
     def get_dates(self, match_list):
         #TODO 
@@ -147,4 +147,5 @@ class League():
         end_date = end_date + timedelta(days=end_leeway)
 
         return {"start date": start_date, "end date": end_date}
+    
     

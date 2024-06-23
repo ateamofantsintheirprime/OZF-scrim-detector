@@ -24,7 +24,7 @@ def request_batch(cache_filepath_prefix, url_prefix : str, url_ids : list, heade
     if not os.path.exists(cache_filepath_prefix):
         os.mkdir(cache_filepath_prefix)
 
-    max_concurrent = 5
+    max_concurrent = 1
     url_list = [url_prefix + id for id in url_ids]
     cache_filepath_list = [cache_filepath_prefix + id + ".json" for id in url_ids]
     headers_list = [headers for i in range(len(url_ids))]
