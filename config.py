@@ -29,7 +29,7 @@ ozf_api_key                 = secrets_directory + "ozf_api_key.json" # This file
 ozf_url_prefix              = "https://ozfortress.com/api/v1/"
 logs_url_prefix             = "http://logs.tf/api/v1/log"
 
-recent_season_ids           = [30] # These seasons will be searched
+recent_season_ids           = [62,58,55] # These seasons will be searched
 
 with open(ozf_api_key, "r") as f:
     key = json.loads(f.read())["key"]
