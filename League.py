@@ -5,11 +5,16 @@ from pprint import pprint
 from Data import request_safe
 from Roster import Roster
 from Matchups import Matchup, PugTeam
+from time import sleep
+from Log import FullLog
 
 class League():
     def __init__(self, id):
         self.id = id
         data = self.get_league_data()
+        self.data = data
+        
+        self.get_officials()
         self.path = self.build_league_dir()
         # TODO: Get date data
         self.name = data["name"]
@@ -21,7 +26,8 @@ class League():
         self.rosters = self.get_rosters(data["rosters"])
         self.init_rosters_parallel()
         self.identify_matchups()
-        self.print_matchups()
+        self.get_official_candidates()
+        # self.print_matchups()
         # count = 0
         # for roster in self.rosters:
         #     count += len(roster.potential_logs)
@@ -51,34 +57,34 @@ class League():
         return path
 
     def identify_matchups(self):
-        self.matchups = []
+        self.all_matchups: list[Matchup] = []
+        self.team_matchups: list[Matchup] = []
+        self.pugscrim_matchups: list[Matchup] = []
         log_matchups = {}
         for roster in self.rosters:
-            for log_side in roster.logs:
-                log = log_side["log"]
-                side = log_side["side"]
+            for log_side in roster.log_sides:
+                log : FullLog = log_side["log"]
+                side : int = log_side["side"]
                 if not log.id in log_matchups.keys():
                     log_matchups[log.id] = {"log": log, "rosters" : [(roster, side)]}
                 else:
                     log_matchups[log.id]["rosters"].append((roster, side))
         for log_id in log_matchups.keys():
-            matchup = log_matchups[log_id]
-            self.matchups.append(Matchup(matchup["rosters"], matchup["log"]))
+            matchup_data = log_matchups[log_id]
+            matchup_obj = Matchup(teams=matchup_data["rosters"], log=matchup_data["log"])
+            self.all_matchups.append(matchup_obj)
+            if isinstance(matchup_obj.red_team, PugTeam):
+                matchup_obj.blue_team.pugscrim_matchups.append(matchup_obj)
+                self.pugscrim_matchups.append(matchup_obj)
+            elif isinstance(matchup_obj.blue_team, PugTeam):
+                matchup_obj.red_team.pugscrim_matchups.append(matchup_obj)
+                self.pugscrim_matchups.append(matchup_obj)
+            else:
+                matchup_obj.red_team.team_matchups.append(matchup_obj)
+                matchup_obj.blue_team.team_matchups.append(matchup_obj)
+                self.team_matchups.append(matchup_obj)
         
-        # for log_id in log_matchups.keys():
-        #     matchup = log_matchups[log_id]
-        #     blue_team = []
-        #     red_team = []
-        #     for team in matchup["rosters"]:
-        #         if team[1] == 0:
-        #             red_team.append(team[0])
-        #         else:
-        #             blue_team.append(team[0])
-        #     assert len(self.blue_team) <= 1
-        #     assert len(self.red_team) <= 1
-        #     assert len(self.blue_team) + len(self.red_team) > 0
-
-        for m in self.matchups:
+        for m in self.all_matchups:
             print("blue team:", m.blue_team.name)
             print("red team:", m.red_team.name)
             print("result:", m.result)
@@ -88,7 +94,7 @@ class League():
         for team in self.rosters:
             team_matchups = []
             pugscrim_matchups = []
-            for matchup in self.matchups:
+            for matchup in self.all_matchups:
                 if matchup.blue_team == team:
                     result = (matchup.result[1], matchup.result[0]) # reverse it cos it should be from the perspective of this team
                     m = {"opponent": matchup.red_team.name, "score" : result, "log_id" : matchup.log.id}
@@ -148,4 +154,108 @@ class League():
 
         return {"start date": start_date, "end date": end_date}
     
-    
+    def get_officials(self) :
+        # pprint(self.data['matches'])
+        self.officials = [
+            #m['id'] : at some point it might help for this to be a dict
+            {
+                    "id":m['id'], 
+                    "created_at": m['created_at'],
+                    "round_number": m['round_number'],
+                    'home_team_id' : None,
+                    'away_team_id' : None,
+                    'match_candidates' : []
+            } for m in self.data['matches']
+        ]
+        for m in self.officials:
+            cache_filepath = os.path.join(config.official_response_cache, str(m['id']) + ".json")
+            url = os.path.join(config.ozf_url_prefix, "matches/", str(m['id']))
+            further_match_data = request_safe(cache_filepath, url, config.headers)['match']
+            # print("further match data:")
+            # pprint(further_match_data)
+            if further_match_data['home_team'] != None:
+                # This is what a bye looks like and needs to be addressed in future
+                m["home_team_id"] = further_match_data['home_team']['id']
+            if further_match_data['away_team'] != None:
+                m["away_team_id"] = further_match_data['away_team']['id']
+
+    def get_official_candidates(self):
+        print("Official Candidates:")
+        for roster in self.rosters:
+            print(f"{roster.name} : team matches")
+            if len(roster.team_matchups) == 0:
+                print("\tCould not find any team vs team matchups for this roster!")
+            for match in roster.team_matchups:
+                print(f"\t{match.blue_team.name} vs {match.red_team.name}")
+                print(f"\t\t{match.log.id}")
+            print()
+
+        for official in self.officials:
+            if official['home_team_id'] == None:
+                home_team_name = "Bye"
+            else:
+                home_team = [r for r in self.rosters if r.id == official['home_team_id']][0]
+                home_team_name = home_team.name
+
+            if official['away_team_id'] == None:
+                away_team_name = "Bye"
+            else:
+                away_team = [r for r in self.rosters if r.id == official['away_team_id']][0]
+                away_team_name = away_team.name
+
+            print(f"looking for {home_team_name} ({official['home_team_id']}) vs {away_team_name} ({official['away_team_id']})")
+
+            if official["away_team_id"] != None and official["home_team_id"] != None:
+                for match in home_team.team_matchups:
+                    print(f"\t{match.blue_team.name} ({match.blue_team.id}) vs {match.red_team.name} ({match.red_team.id}): [{match.log.id}]")
+                    # print(type(match.blue_team.id))
+                    # print(type(match.red_team.id))
+                    # print(type(official['home_team_id']))
+                    # print(type(official['away_team_id']))
+                    if official['home_team_id'] == match.blue_team.id and official['away_team_id'] == match.blue_team.id:
+                        official['match_candidates'].append(match)
+                        print("success!")
+                    if official['away_team_id'] == match.blue_team.id and official['home_team_id'] == match.blue_team.id:
+                        official['match_candidates'].append(match)
+                        print("success!")
+                if len(official['match_candidates']) == 0:
+                    print("trying pugscrim logs...")
+                    for match in home_team.pugscrim_matchups:
+                        print(f"\t{match.blue_team.name} ({match.blue_team.id}) vs {match.red_team.name} ({match.red_team.id}): [{match.log.id}]")
+                        self.check_match_closeness(match, home_team, away_team)
+                    for match in away_team.pugscrim_matchups:
+                        print(f"\t{match.blue_team.name} ({match.blue_team.id}) vs {match.red_team.name} ({match.red_team.id}): [{match.log.id}]")
+                        self.check_match_closeness(match, home_team, away_team)
+            print()
+        # pprint(self.officials)
+        
+    def check_match_closeness(self, match: Matchup, roster1: Roster, roster2: Roster):
+        if isinstance(match.blue_team, PugTeam):
+            blue_player_ids = [id3 for id3 in match.blue_team.players]
+        else:
+            blue_player_ids = [player.id3 for player in match.blue_team.players]
+        if isinstance(match.red_team, PugTeam):
+            red_player_ids = [id3 for id3 in match.red_team.players]
+        else:
+            red_player_ids = [player.id3 for player in match.red_team.players]
+
+        roster1_player_ids = [player.id3 for player in roster1.players]
+        roster2_player_ids = [player.id3 for player in roster2.players]
+
+        print("red team player ids: ", red_player_ids)
+        print("blue team player ids: ", blue_player_ids)
+
+        print(f"{roster1.name} player ids: ", roster1_player_ids)
+        print(f"{roster2.name} player ids: ", roster2_player_ids)
+
+        roster1_blue_sim = len([p_id for p_id in blue_player_ids if p_id in roster1_player_ids])
+        roster1_red_sim = len([p_id for p_id in red_player_ids if p_id in roster1_player_ids])
+
+        roster2_blue_sim = len([p_id for p_id in blue_player_ids if p_id in roster2_player_ids])
+        roster2_red_sim = len([p_id for p_id in red_player_ids if p_id in roster2_player_ids])
+
+        print(f"{roster1.name}-blue_team similarity: {roster1_blue_sim}/{len(blue_player_ids)}")
+        print(f"{roster1.name}-red_team similarity: {roster1_red_sim}/{len(red_player_ids)}")
+
+        print(f"{roster2.name}-blue_team similarity: {roster2_blue_sim}/{len(blue_player_ids)}")
+        print(f"{roster2.name}-red_team similarity: {roster2_red_sim}/{len(red_player_ids)}")

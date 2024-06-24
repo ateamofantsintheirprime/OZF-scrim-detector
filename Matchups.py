@@ -1,8 +1,10 @@
+from Roster import Roster
+from Log import FullLog
 class Matchup():
-    def __init__(self, teams, log):
+    def __init__(self, teams: list[Roster], log: FullLog):
 
-        self.blue_team = []
-        self.red_team = []
+        self.blue_team: Roster = []
+        self.red_team: Roster = []
         self.log = log
 
         self.result = log.score

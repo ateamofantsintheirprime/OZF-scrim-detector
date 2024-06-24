@@ -45,7 +45,7 @@ def request_batch(cache_filepath_prefix, url_prefix : str, url_ids : list, heade
 
     return data
 
-def request_safe(cache_filepath, url, headers = {}, debug = False):
+def request_safe(cache_filepath, url, headers = {}, debug = False) -> dict:
     """This a type of request that "plays nice" with 
     APIs and responds appropriately to their various
     error codes"""
@@ -68,7 +68,7 @@ def request_safe(cache_filepath, url, headers = {}, debug = False):
 
 
 # UPDate this docstring
-def request(cache_filepath, url, headers = {}):
+def request(cache_filepath, url, headers = {}) -> dict:
     """ If the data exists in a file in the cache, then read that file.
     If not, then request that data from the url.
     Take the data from the request, sanitise it and format it.

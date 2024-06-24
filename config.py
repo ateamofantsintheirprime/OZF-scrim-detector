@@ -9,6 +9,7 @@ cache_directory             = data_dir + "cache/"
 leagues_directory           = resource_directory + "leagues/"
 logs_directory              = resource_directory + "logs/"
 league_response_cache       = cache_directory + "league_data/"
+official_response_cache    = cache_directory + "official_data/"
 roster_response_cache       = cache_directory + "roster_data/"
 player_log_search_cache     = cache_directory + "player_log_search/"
 log_cache                   = cache_directory + "logs/"
@@ -21,6 +22,7 @@ filetree                    = [data_dir,
                                logs_directory,
                                cache_directory, 
                                league_response_cache,
+                               official_response_cache,
                                roster_response_cache,
                                player_log_search_cache,
                                log_cache] # To be constructed when program is run
@@ -29,7 +31,7 @@ ozf_api_key                 = secrets_directory + "ozf_api_key.json" # This file
 ozf_url_prefix              = "https://ozfortress.com/api/v1/"
 logs_url_prefix             = "http://logs.tf/api/v1/log"
 
-recent_season_ids           = [30,58] # These seasons will be searched
+recent_season_ids           = [30] # These seasons will be searched
 
 with open(ozf_api_key, "r") as f:
     key = json.loads(f.read())["key"]

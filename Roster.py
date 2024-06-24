@@ -14,7 +14,7 @@ class Matchup():
 class Roster():
     def __init__(self, id, league_dir, league_start_date, league_end_date):
         self.id = id
-        self.logs = []
+        self.logs: list[FullLog] = []
         self.roster_dir = self.build_roster_dir(league_dir)
         self.start_date = league_start_date
         self.end_date = league_end_date
@@ -25,7 +25,10 @@ class Roster():
 
         # Store roster data
         self.name = data["name"]
-        self.players = []
+        self.players: list[Player] = []
+
+        self.team_matchups = []
+        self.pugscrim_matchups = []
 
         # request_progress = 0
         for player in data["players"]:
@@ -33,7 +36,7 @@ class Roster():
             id64 = player["steam_64_str"]
             id3 = player["steam_id3"]
             name = player["name"]
-            new_player = Player(id64, id3,ozfid, name)
+            new_player: Player = Player(id64, id3,ozfid, name)
             self.players.append(new_player)
             # print(f"Constructing Player: {request_progress}/{len(data['players'])}\n\tRoster id: {self.id}\n\tRoster name: {self.name}\n\tID64: {new_player.id64}\n\tName: {new_player.name}")
             # request_progress += 1
@@ -58,7 +61,7 @@ class Roster():
         url_prefix = config.logs_url_prefix + "/"
         ids = [str(id) for id in self.potential_logs.keys()]
         batch = request_batch(cache_filepath_prefix, url_prefix, ids)
-        self.logs = []
+        self.logs.clear()
         for i in range(len(batch)):
             self.logs.append(FullLog(batch[i], ids[i]))
         # self.logs = [FullLog(log_data) for log_data in batch]
@@ -102,29 +105,35 @@ class Roster():
         # print(trimmed_logs.keys())
         return logs
 
-    def trim_logs(self, player_threshhold =4):
+    def trim_logs(self, player_threshhold =3):
         trimmed_logs = []
+        self.log_sides = []
         # filters out non-sixes logs
-        trimmed_logs = self.only_sixes(trimmed_logs)
-
+        # trimmed_logs = self.only_sixes(self.logs)
         for log in self.logs:
-            red_count = len([player.id3 for player in self.players if player.id3 in log.red_team])
-            blue_count = len([player.id3 for player in self.players if player.id3 in log.blue_team])
+            # Filter out non-sixes logs or logs missing lots of players
+            if abs(len(log.red_team) - 6) <= 1 and abs(len(log.blue_team) - 6) <= 1:
+                red_count = len([player.id3 for player in self.players if player.id3 in log.red_team])
+                blue_count = len([player.id3 for player in self.players if player.id3 in log.blue_team])
 
-            if red_count > player_threshhold:
-                trimmed_logs.append({"log" : log, "side": 0})
-            elif blue_count > player_threshhold:
-                trimmed_logs.append({"log" : log, "side": 1})
+                if red_count > player_threshhold:
+                    self.log_sides.append({"log" : log, "side": 0})
+                    trimmed_logs.append(log)
+                elif blue_count > player_threshhold:
+                    self.log_sides.append({"log" : log, "side": 1})
+                    trimmed_logs.append(log)
 
+        # print("trimmed logs:", trimmed_logs)
+        assert len(trimmed_logs) > 0 # If this fails we have some problems
 
         self.logs = trimmed_logs
 
-    def only_sixes(self, logs):
-        trimmed_logs = []
-        for log in logs:
-            if abs(len(log.red_team) - 6) <= 1 and abs(len(log.blue_team) - 6) <= 1:
-                trimmed_logs.append(log)
-        return trimmed_logs
+    # def only_sixes(self, logs):
+    #     trimmed_logs = []
+    #     for log in logs:
+    #         if abs(len(log.red_team) - 6) <= 1 and abs(len(log.blue_team) - 6) <= 1:
+    #             trimmed_logs.append(log)
+    #     return trimmed_logs
 
     def print(self):
         # TODO
@@ -146,7 +155,15 @@ class Roster():
                 (What if they get an extension?)
         """
 
-        pprint(self.data)
+        # pprint(self.data['matches'])
+        self.officials = [
+            {
+                "id":m['id'], 
+                "created_at" : m['created_at'],
+                "round_number": m['round_number']
+            } for m in self.data['matches']
+        ]
+        pprint(self.officials)
 
 
     # def get_logs(self):
