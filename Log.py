@@ -1,36 +1,74 @@
 from datetime import datetime
 from pprint import pprint
+from log_filtration_variables import *
 
-# These can probably be a subclass-superclass situation
 class MiniLog():
-    def __init__(self, mini_log_data):
-        """Can be requested in batches, used to do preliminary
-        culling or trimming of the list of logs played by a team"""
-        self.id = mini_log_data["id"]
-        self.date = datetime.fromtimestamp(mini_log_data["date"]).replace(tzinfo=None)
+	"""A container for the simple log information given
+	in batches by the search function of the logs.tf API """
+	def __init__(self, json=None):
 
-    def falls_within_dates(self, date1, date2):
-        # print(f"Testing date: {self.date}")
-        # print(f"date1: {date1}")
-        # print(f"date2: {date2}")
-        # print(f"self.date > date1 and self.date < date2: {self.date > date1 and self.date < date2}")
-        # print(f"self.date < date1 and self.date > date2: {self.date < date1 and self.date > date2}")
-        return self.date > date1 and self.date < date2 or self.date < date1 and self.date > date2
+		self.id = int
+		self.date = datetime
 
-class FullLog():
-    def __init__(self, log_data, id):
-        """going to be used to store the full log data in the db"""
-        self.id = id
-        self.date = datetime.fromtimestamp(log_data["info"]["date"]).replace(tzinfo=None)
-        self.red_team = []
-        self.blue_team = []
-        self.score = (log_data["teams"]["Red"]["score"],
-                      log_data["teams"]["Blue"]["score"])
-        self.get_teams(log_data)
+		if json != None:
+			self.from_json(json)
+		# self.game_mode
+		# Double check exactly what info the minilogs contain
 
-    def get_teams(self, log_data):
-        player_dict = log_data["players"]
-        player_ids = log_data["players"].keys()
-        self.red_team = [id[1:-1] for id in player_ids if player_dict[id]["team"] == "Red"]
-        self.blue_team = [id[1:-1] for id in player_ids if player_dict[id]["team"] == "Blue"]
-        
+	def from_json(self,json: dict):
+		""" Fill out information from API search response"""
+		print("MiniLog JSON:")
+		pprint(json)
+		raise Exception
+		pass
+
+	def falls_within_dates(self, date1: datetime, date2: datetime) -> bool:
+		"""Check if this log falls between two dates"""
+		return (self.date > date1 and self.date < date2) or (self.date < date1 and self.date > date2)
+
+class FullLog(MiniLog):
+	"""A container for the more detailed log information given
+	individually by the raw log data function of the logs.tf API
+	
+	This should only ever be used when it is not possible to use
+	a Game object of some kind instead.
+	"""
+	def __init__(self):
+
+		# self.game_mode
+		self.red_team_player_ids = list[int]
+		self.blue_team_player_ids = list[int]
+
+		self.score = tuple[int,int]
+		self.length = None
+		print("parse time from json!!")
+
+	def from_json(self, json: dict):
+		""" Fill out information from API search response"""
+		print("finish this")
+		raise Exception
+	
+	def deviant_team_sizes(self):
+		if len(self.red_team_player_ids) < MIN_TEAM_SIZE_THRESHHOLD:
+			return True
+		if len(self.blue_team_player_ids) < MIN_TEAM_SIZE_THRESHHOLD:
+			return True
+		if len(self.red_team_player_ids) >= MAX_TEAM_SIZE_THRESHHOLD:
+			return True
+		if len(self.blue_team_player_ids) >= MAX_TEAM_SIZE_THRESHHOLD:
+			return True
+		if len(self.blue_team_player_ids) + len(self.red_team_player_ids) > MAX_TOTAL_GAME_SIZE_THRESHHOLD:
+			return True
+		return False
+
+def validate(log_object: MiniLog):
+	if isinstance(log_object, MiniLog):
+		# I'm not sure what to check for this?
+		pass
+
+	if isinstance(log_object, FullLog):
+		pass
+		## Switching out players causes this number to be wrong
+		# assert len(log_object.red_team_player_ids) == 6
+		# assert len(log_object.blue_team_player_ids) == 6
+

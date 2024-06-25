@@ -1,15 +1,15 @@
-from League import *
-from Roster import *
+from League_old import *
+from Roster_old import *
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import datetime, timedelta
 
 def draw_timeline(league : League):
 
-    print(type(league.start_date))
-    print(league.start_date)
-    print(league.end_date)
-    pass
+	print(type(league.start_date))
+	print(league.start_date)
+	print(league.end_date)
+	pass
 
 league = League(30) 
 league.get_officials()
@@ -24,27 +24,27 @@ main_event_end = league.end_date
 
 # Define sub-events with either start and end dates, or just a start date
 sub_events = [
-    {'name': 'Sub-event 1', 'start': datetime(2023, 2, 10), 'end': datetime(2023, 2, 20)},
-    {'name': 'Sub-event 2', 'start': datetime(2023, 3, 5), 'end': datetime(2023, 4, 15)},
-    {'name': 'Sub-event 3', 'start': datetime(2023, 6, 1), 'end': datetime(2023, 6, 1)},  # Single day event
-    {'name': 'Sub-event 4', 'start': datetime(2023, 7, 7)},  # Start date only
-    {'name': 'Sub-event 5', 'start': datetime(2023, 10, 1), 'end': datetime(2023, 10, 10)},
+	{'name': 'Sub-event 1', 'start': datetime(2023, 2, 10), 'end': datetime(2023, 2, 20)},
+	{'name': 'Sub-event 2', 'start': datetime(2023, 3, 5), 'end': datetime(2023, 4, 15)},
+	{'name': 'Sub-event 3', 'start': datetime(2023, 6, 1), 'end': datetime(2023, 6, 1)},  # Single day event
+	{'name': 'Sub-event 4', 'start': datetime(2023, 7, 7)},  # Start date only
+	{'name': 'Sub-event 5', 'start': datetime(2023, 10, 1), 'end': datetime(2023, 10, 10)},
 ]
 
 sub_events = [
-    {
-        "name": f"round {match['round_number']} gen",
-        "start" : datetime.fromisoformat(match["created_at"]).replace(tzinfo=None),
-        "colour" : 'ro'
-    } for match in league.officials
+	{
+		"name": f"round {match['round_number']} gen",
+		"start" : datetime.fromisoformat(match["created_at"]).replace(tzinfo=None),
+		"colour" : 'ro'
+	} for match in league.officials
 ]
 
 sub_events.extend([
-    {
-        "name": f"",
-        "start" : match.log.date,
-        "colour" : 'go'
-    } for match in league.team_matchups
+	{
+		"name": f"",
+		"start" : match.log.date,
+		"colour" : 'go'
+	} for match in league.team_matchups
 ])
 
 
@@ -59,14 +59,14 @@ ax.plot([main_event_start, main_event_end], [1, 1], color='blue', linewidth=3, m
 
 # Plot sub-events
 for idx, event in enumerate(sub_events, start=2):
-    # if 'end' in event:
-        # ax.plot([event['start'], event['end']], [idx, idx], color='green', linewidth=2, marker='o')
-    # else:
-    ax.plot(event['start'], idx, event['colour'])
+	# if 'end' in event:
+		# ax.plot([event['start'], event['end']], [idx, idx], color='green', linewidth=2, marker='o')
+	# else:
+	ax.plot(event['start'], idx, event['colour'])
 
-    # Label the sub-events
-    ax.text(event['start'] if 'end' not in event else event['start'] + (event['end'] - event['start']) / 2,
-            idx + 0.1, event['name'], verticalalignment='bottom', horizontalalignment='center')
+	# Label the sub-events
+	ax.text(event['start'] if 'end' not in event else event['start'] + (event['end'] - event['start']) / 2,
+			idx + 0.1, event['name'], verticalalignment='bottom', horizontalalignment='center')
 
 # Format the x-axis
 ax.xaxis.set_major_locator(mdates.MonthLocator())

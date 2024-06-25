@@ -1,12 +1,12 @@
 import os.path
 from config import recent_season_ids, filetree
-from League import League
+from League_old import League
 
 # Construct Filetree
 
 for directory in filetree:
-    if not os.path.exists(directory):
-        os.mkdir(directory)
+	if not os.path.exists(directory):
+		os.mkdir(directory)
 
 # Instantiate League objects
 
