@@ -2,7 +2,7 @@ from abc import ABC, abstractclassmethod
 from datetime import datetime
 from typing import Union
 
-from Roster import OZFRoster, PugTeam
+from Roster import Roster, PugTeam
 from Player import NonOZFPlayer
 from Log import FullLog
 from League import League
@@ -24,8 +24,8 @@ class BaseGameTemplate(ABC):
 class PugScrim(BaseGameTemplate):
 	"""A matchup with exactly 1 identifiable ozfortress roster"""
 	def __init__(self):
-		self.team_alpha = Union[PugTeam, OZFRoster]
-		self.team_beta = Union[PugTeam, OZFRoster]
+		self.team_alpha = Union[PugTeam, Roster]
+		self.team_beta = Union[PugTeam, Roster]
 
 class TeamGame(BaseGameTemplate):
 	"""A matchup with exactly 2 identifiable ozfortress rosters.
@@ -36,8 +36,8 @@ class TeamGame(BaseGameTemplate):
 	issue is that I don't want to imply (yet) that an official is
 	a type of scrim. Although maybe I should."""
 	def __init__(self):
-		self.team_alpha = OZFRoster
-		self.team_beta = OZFRoster
+		self.team_alpha = Roster
+		self.team_beta = Roster
 
 		self.alpha_mercs = list[NonOZFPlayer]
 		self.beta_mercs = list[NonOZFPlayer]
@@ -78,8 +78,8 @@ class OfficialSeries():
 		self.created_at : datetime
 		self.parent_league = League
 
-		self.home_team = OZFRoster
-		self.away_team = OZFRoster
+		self.home_team = Roster
+		self.away_team = Roster
 
 		self.home_team_mercs = list[NonOZFPlayer]
 		self.away_team_mercs = list[NonOZFPlayer]

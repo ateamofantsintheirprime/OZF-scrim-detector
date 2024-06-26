@@ -7,7 +7,7 @@ from Data import request_batch
 from log_filtration_variables import *
 import config
 
-class OZFRoster():
+class Roster():
 	"""A group of players with an ozf team page
 	signed up to a season (NOTE: this roster is 
 	specific to that season. Last & Found in S30

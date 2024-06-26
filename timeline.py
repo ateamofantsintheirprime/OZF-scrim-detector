@@ -1,20 +1,35 @@
-from League_old import *
-from Roster_old import *
+# from League_old import *
+# from Roster_old import *
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import datetime, timedelta
+from database_helper import *
+from db import * 
 
-def draw_timeline(league : League):
+league_data = fetch_league_data(league_id=30)
+league = construct_league(json=league_data)
 
-	print(type(league.start_date))
-	print(league.start_date)
-	print(league.end_date)
-	pass
+officials = get_league_officials(league.id)
+update_all_roster_info(league_id=30)
 
-league = League(30) 
-league.get_officials()
+players = db.get_players_in_league(30)
 
-# draw_timeline(league)
+for p in players:
+	print(p.name)
+
+rosters = db.get_rosters_in_league(30)
+
+for r in rosters:
+	print(f"{r.name}, r_ID:{r.id}")
+	
+last_and_found_r_id = 1097
+
+update_all_player_logs(30)
+
+logs = db.get_logs_of_roster(1097, 4)
+print("lnf logs:")
+for log in logs:
+	print(log.id)
 
 # Define the main event with start and end dates
 # main_event_start = datetime(2023, 1, 1)
@@ -22,30 +37,21 @@ league.get_officials()
 main_event_start = league.start_date
 main_event_end = league.end_date
 
-# Define sub-events with either start and end dates, or just a start date
-sub_events = [
-	{'name': 'Sub-event 1', 'start': datetime(2023, 2, 10), 'end': datetime(2023, 2, 20)},
-	{'name': 'Sub-event 2', 'start': datetime(2023, 3, 5), 'end': datetime(2023, 4, 15)},
-	{'name': 'Sub-event 3', 'start': datetime(2023, 6, 1), 'end': datetime(2023, 6, 1)},  # Single day event
-	{'name': 'Sub-event 4', 'start': datetime(2023, 7, 7)},  # Start date only
-	{'name': 'Sub-event 5', 'start': datetime(2023, 10, 1), 'end': datetime(2023, 10, 10)},
-]
-
 sub_events = [
 	{
-		"name": f"round {match['round_number']} gen",
-		"start" : datetime.fromisoformat(match["created_at"]).replace(tzinfo=None),
+		"name": f"round {match.round_number} gen",
+		"start" : match.creation_date,
 		"colour" : 'ro'
-	} for match in league.officials
+	} for match in officials
 ]
 
-sub_events.extend([
-	{
-		"name": f"",
-		"start" : match.log.date,
-		"colour" : 'go'
-	} for match in league.team_matchups
-])
+# sub_events.extend([
+# 	{
+# 		"name": f"",
+# 		"start" : match.log.date,
+# 		"colour" : 'go'
+# 	} for match in league.team_matchups
+# ])
 
 
 

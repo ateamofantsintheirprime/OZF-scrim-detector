@@ -3,7 +3,7 @@ import datetime
 from datetime import datetime, timedelta
 from pprint import pprint
 from Data import request_safe
-from Roster import OZFRoster, PugTeam 
+from Roster import Roster, PugTeam 
 from Player import OZFPlayer, NonOZFPlayer
 from Matchup import PugScrim, TeamGame, OfficialGame, OfficialSeries
 
@@ -38,7 +38,7 @@ class League():
 		# Child variables, contain eachother
 		self.ozf_players: list[OZFPlayer]
 		self.non_ozf_players: list[NonOZFPlayer] # This probably wont be of much use aside from bug testing
-		self.rosters: list[OZFRoster]
+		self.rosters: list[Roster]
 		# self.pug_teams: list[PugTeam] ???  do we want to track all the pug teams?? prob not??
 		self.divisions #??? TODO typehint this
 		self.team_games: list[TeamGame]
@@ -82,7 +82,10 @@ class League():
 		"""Fetch all data related to all players, rosters, and officials
 		Instantiate all child objects and fetch all of their data recursively"""
 		if not self.__data_fetched:
-			self.fetch_league_data()
+			# raw_data = self.fetch_league_data()
+			
+			# construct_matches(raw_data['matches'])
+
 			self.estimate_dates()
 			self.get_all_rosters()
 			self.get_all_officials()
@@ -113,8 +116,8 @@ class League():
 			
 			assert raw_roster_data['id'] == id
 
-			# Construct OZFRoster
-			roster = OZFRoster()
+			# Construct Roster
+			roster = Roster()
 			roster.from_json(raw_roster_data)
 
 			for raw_player_data in raw_roster_data['players']:

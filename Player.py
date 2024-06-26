@@ -1,5 +1,5 @@
 from abc import ABC, abstractclassmethod
-from Roster import OZFRoster
+from Roster import Roster
 from Matchup import TeamGame, OfficialGame, OfficialSeries, PugScrim, BaseGameTemplate
 from Log import FullLog, MiniLog
 from typing import Union
@@ -117,7 +117,7 @@ class NonOZFPlayer(BasePlayerTemplate):
 class OZFPlayer(BasePlayerTemplate):
 	def __init__(self):
 		self.ozfid : int
-		self.rosters: list[OZFRoster] = []
+		self.rosters: list[Roster] = []
 		self.official_games: list[OfficialSeries] = []
 		self.official_series: list[OfficialSeries] = []
 
