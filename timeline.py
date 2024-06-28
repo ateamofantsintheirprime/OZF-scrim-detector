@@ -2,14 +2,15 @@
 # from Roster_old import *
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from datetime import datetime, timedelta
-from database_helper import *
-from db import * 
+from new_caching_test import update_all_player_logs
+# from datetime import datetime, timedelta
+from database_helper import construct_league, request_from_ozf, update_all_roster_info, update_all_player_logs
+import db
 
-league_data = fetch_league_data(league_id=30)
+league_data = request_from_ozf(league_id=30)
 league = construct_league(json=league_data)
 
-officials = get_league_officials(league.id)
+officials = db.get_league_officials(league.id)
 update_all_roster_info(league_id=30)
 
 players = db.get_players_in_league(30)
