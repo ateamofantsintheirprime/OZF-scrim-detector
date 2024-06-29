@@ -23,7 +23,7 @@ def insert_log_tracker(id_64:int,num_logs_total:int,num_logs_tracked:int,valid_u
 
 def update_log_tracker(id_64:int, new_total:int=None, num_logs_tracked:int=None, valid_until:datetime=None):#, latest_log_id:int=None):
 	with Session(league_engine) as session:
-		print(f"id64:{id_64}")
+		# print(f"id64:{id_64}")
 		tracker = session.get(PlayerLogTracker, id_64)
 		assert tracker != None
 		if new_total != None:

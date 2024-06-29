@@ -11,15 +11,16 @@ from threading import Thread, Lock, Event
 from concurrent.futures import ThreadPoolExecutor
 from random import random
 from debug import debug_print
+import copy
 
 class LogSearcher():
 	"""This is designed to search for ALL logs of a set of targets
 	ONLY FOR LOGS.TF API"""
 	def __init__(self):
-		# self.per_player_log_limit:int = None
-		# self.date_limit:datetime = None
 
-		self.existing_logs = set(log.get_all_logs())
+		self._e_t = Thread(target=self.get_all_logs)
+		self._e_t.start()
+
 		self.existing_player_logs : dict[int:set[Log]] = {}
 
 		self.id_counter = 0
@@ -34,10 +35,12 @@ class LogSearcher():
 
 		# Synchronisation flag
 		self.complete = Event()
-		self.requesting = Event()
-		self.requesting.set()
-		self.processing = Event()
-		self.processing.set()
+		self.requester_waiting = Event()
+		self.processor_waiting = Event()
+
+	def get_all_logs(self):
+		print("starting to get all logs")
+		self.existing_logs = set(log.get_all_logs())
 
 	def get_target_id64s(self):
 		"""This requires all leagues, rosters and players are already in the database
@@ -64,10 +67,7 @@ class LogSearcher():
 
 	def get_existing_player_logs(self):
 		self.existing_player_logs.clear()
-		for (i, id_64) in enumerate(self.targeted_id_64s):
-			debug_print(f"getting existing player logs: {i}/{len(self.targeted_id_64s)}")
-			existing_logs = player.get_player_logs(player_id_64=id_64)
-			self.existing_player_logs[id_64] = existing_logs
+		self.existing_player_logs = player.get_existing_logs(self.targeted_id_64s)
 
 	def search_url(self,id_64:int, offset:int) -> str:
 		return f"http://logs.tf/api/v1/log?player={id_64}&offset={offset}"
@@ -84,31 +84,28 @@ class LogSearcher():
 			self.id_counter += 1
 
 	def process_result_queue(self):
-		self.awaiting_results.clear()
 		while not self.complete.is_set():
 			result:Result = self.result_queue.pop_value()
 			if result == None:
-				print("PROCESSOR: waiting for a result to arrive")
+				if len(self.awaiting_results) == 0:
+					self.processor_waiting.set()
 				sleep(1)
 				continue
-			
 			if result.id in self.awaiting_results:
-				print("PROCESSOR: removed a result i was waiting for")
+				# print("PROCESSOR: removed a result i was waiting for")
 				self.awaiting_results.remove(result.id)
-
 			new_job = self.process_result(result)
 			if new_job != None:
-				print("PROCESSOR: adding a new job to queue")
 				self.awaiting_results.append(new_job.id)
 				self.job_queue.add_value(new_job)
-				self.processing.set()
+				# print(f"PROCESSOR: adding a new job to queue {len(self.awaiting_results)}")
 			
-			if len(self.awaiting_results) == 0:
-				self.processing.clear()
+			if len(self.awaiting_results) > 0:
+				self.processor_waiting.clear()
+
 
 	def process_result(self, result:'Result'):
 		response=result.response
-
 		# Step 1 parse response
 		data = json.loads(expunge_unicode(response.text))
 		id_64 = int(data['parameters']['player'])
@@ -143,7 +140,7 @@ class LogSearcher():
 					)
 				for l in data['logs']
 			}
-			if results < total:
+			if offset+results < total:
 				if player_log_tracker.num_logs_tracked < total:
 					# There are more logs to request for this guy!
 					more_to_add = True
@@ -163,42 +160,31 @@ class LogSearcher():
 				url=url,
 				priority=True
 			)
+		print(f"PROCESSOR: Remaining jobs: {len(self.awaiting_results)}")
 		return None
 
 
-	def add_logs_to_database(self, log_set:set, player_log_tracker: PlayerLogTracker):
+	def add_logs_to_database(self, log_set:set[Log], player_log_tracker: PlayerLogTracker):
 		more_to_add=False
-
-		# just_add_to_database = set()
-		# add_to_player_and_database = set()
 
 		# Set operations are very fast!
 		existing_player_logs = self.existing_player_logs[player_log_tracker.id_64]
-		print(log_set)
+
 		# Remove the logs that the player is already recorded in
 		add_player_to = log_set.difference(existing_player_logs)
 		add_player_to_ids = [l.id for l in add_player_to]
 		# Remove the logs that are already in the database
 		add_to_database = log_set.difference(self.existing_logs)
-		assert add_player_to.issuperset(add_to_database)
-
-		# TODO Not sure about this confusing "not bound to session error"
-		all_logs = log.get_all_logs()
-		assert self.existing_logs == all_logs
-		assert all_logs.isdisjoint(add_to_database)
-		assert self.existing_logs.isdisjoint(add_to_database)
-
-		log.add_log_batch(add_to_database)
 		self.existing_logs.update(add_to_database)
-		# print(all_logs.issuperset(self.existing_logs))
-		# print(self.existing_logs.issuperset(all_logs))
-		# print(all_logs.symmetric_difference(self.existing_logs))
-		# assert self.existing_logs == all_logs
 
+		for l in add_to_database:
+			print(l.id)
+
+		self.existing_player_logs[player_log_tracker.id_64].update(add_player_to)
+		log.add_log_batch(copy.deepcopy(add_to_database))
 
 		log.add_player_to_log_batch_id(player_log_tracker.id_64, add_player_to_ids)
 
-		self.existing_player_logs[player_log_tracker.id_64].update(add_player_to)
 
 		tracker.update_log_tracker(
 			player_log_tracker.id_64,
@@ -210,9 +196,11 @@ class LogSearcher():
 		# Step 1
 		self.get_initial_jobs()
 		self.get_existing_player_logs()
+		print("waiting to get all logs")
+		self._e_t.join()
 		# Step 2
 		# TODO: Make thread to do this
-		threaded_requester = ThreadedRequester(self.job_queue, self.result_queue, self.requesting, self.complete)
+		threaded_requester = ThreadedRequester(self.job_queue, self.result_queue, self.requester_waiting, self.complete)
 		
 		requesting_thread = Thread(target=threaded_requester.start)
 		# Step 3
@@ -228,17 +216,17 @@ class LogSearcher():
 
 	def wait_until_threads_complete(self, p_thread:Thread, r_thread:Thread):
 		while True:
-			self.processing.wait()
-			self.requesting.wait()
+			self.processor_waiting.wait()
+			self.requester_waiting.wait()
 			sleep(3)
 			# We want a 3 second period where both threads are quiet
-			if not self.processing.is_set() and not self.requesting.is_set():
+			if self.processor_waiting.is_set() and self.requester_waiting.is_set():
 				# Both threads were silent for 3 seconds straight = done
 				self.complete.set()
 				p_thread.join()
 				r_thread.join()
 				break
-			 
+		print("threads complete")
 
 
 class Job():
@@ -266,7 +254,7 @@ class PriorityQueue():
 		self.priority = []
 		self.regular_lock = Lock()
 		self.priority_lock = Lock()
-	
+
 	def clear(self):
 		self.priority_lock.acquire(blocking=True)
 		self.priority.clear()
@@ -310,11 +298,11 @@ class PriorityQueue():
 		return len(self.priority) + len(self.regular)
 
 class ThreadedRequester():
-	def __init__(self, job_queue:PriorityQueue, result_queue:PriorityQueue, requesting:Event, complete:Event):
+	def __init__(self, job_queue:PriorityQueue, result_queue:PriorityQueue, requester_waiting:Event, complete:Event):
 		self.outer_job_queue = job_queue
 		self.outer_result_queue = result_queue
 
-		self.requesting = requesting
+		self.requester_waiting = requester_waiting
 		self.complete = complete
 
 		self.max_thread_count = 10
@@ -329,25 +317,25 @@ class ThreadedRequester():
 			# Put jobs on the inner queue
 			job:Job = self.outer_job_queue.pop_value()
 			if job != None:
-				print(f"DISPATCHER: Adding a job to the inner queue (queue length:{len(self.inner_job_queue)})")
-				self.requesting.set()
+				# print(f"DISPATCHER: Adding a job to the inner queue (queue length:{len(self.inner_job_queue)})")
+				self.requester_waiting.clear()
 				awaiting_values.append(job.id)
 				self.inner_job_queue.add_value(job)
 			# Take results off the inner queue
 			result:Result = self.inner_result_queue.pop_value()
 			if result != None:
-				print("DISPATCHER: taking a result off the inner queue")
+				# print(f"DISPATCHER: taking a result off the inner queue, {len(awaiting_values)}")
 				awaiting_values.remove(result.id) # This should never raise a value error
 				self.outer_result_queue.add_value(result)
 				dispatcher_sleep_time /= 3
 			# Check if there are any jobs in progress
 			if job == None and len(awaiting_values) == 0:
-				print("DISPATCHER: no jobs to execute and no in progress jobs")
-				self.requesting.clear()
+				# print("DISPATCHER: no jobs to execute and no in progress jobs")
+				self.requester_waiting.set()
 				sleep(1)
 			# If there are jobs in progress but none to dispatch, then sleep for a bit
 			elif job == None and result == None:
-				print(f"DISPATCHER: waiting for workers to complete requests {dispatcher_sleep_time}")
+				# print(f"DISPATCHER: waiting for workers to complete requests {dispatcher_sleep_time}")
 				sleep(dispatcher_sleep_time)
 				dispatcher_sleep_time *= 1.5
 				# Wait for one of the theads to finish their request
@@ -357,19 +345,19 @@ class ThreadedRequester():
 		sleep_time = 1.0
 		backoff_rate = 1.7 # using prime numbers gives granualarity to sleep time.
 		attack_rate = 1.3
-		print("WORKER: starting up worker")
+		# print("WORKER: starting up worker")
 		while not self.complete.is_set():
-			print("WORKER: worker about to grab a job")
+			# print("WORKER: worker about to grab a job")
 			job:Job = self.inner_job_queue.pop_value()
 			if job == None:
 				sleep(1)
-				print("WORKER: waiting for a job to arrive")
+				# print("WORKER: waiting for a job to arrive")
 				continue
-			print(f"WORKER: making a request, sleep_time: {sleep_time}")
+			# print(f"WORKER: making a request, sleep_time: {sleep_time}")
 			result = job.execute()
 			if result.status() == 200:
 				# Accelerate attack when OKed
-				print(f"WORKER: request success")
+				# print(f"WORKER: request success {sleep_time}")
 				self.inner_result_queue.add_value(result)
 				sleep_time /= attack_rate
 			elif result.status() == 429:

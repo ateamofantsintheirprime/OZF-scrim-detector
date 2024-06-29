@@ -10,7 +10,7 @@ def get_response(key:str) -> OZFResponse:
 def insert_response(key:str, new_data:dict):
 	with Session(cache_engine) as session:
 		if session.get(OZFResponse, key) is None:
-			print("inserting new response")
+			# print("inserting new response")
 			resp = OZFResponse(key=key,data=new_data)
 			session.add(resp)
 			session.commit()

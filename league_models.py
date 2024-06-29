@@ -148,12 +148,18 @@ class Log(LeagueBase):
 	
 	# golden_cap : Mapped[Boolean] = mapped_column(Boolean)
 	def __eq__(self, other):
-		if isinstance(other, Log):
-			return self.id == other.id
+		assert isinstance(other, Log)
+		# print(self.id)
+		# print(other.id)
+		# print()
+		# if isinstance(other, Log):
+		return self.id == other.id
 	def __hash__(self):
 		return self.id
 	def __str__(self):
-		return self.id
+		return str(self.id)
+	def __lt__(self,other):
+		return self.id < other.id
 
 class Official(LeagueBase):
 	__tablename__ = "official"

@@ -1,4 +1,5 @@
 from db import league_engine
+
 from sqlalchemy.orm import Session
 from league_models import Log, Player, PlayerInLog, PlayerLogTracker
 from datetime import datetime
@@ -8,14 +9,14 @@ def get_log(log_id:int) -> Log:
 		return session.get(Log, log_id)
 
 def get_all_logs() -> set[Log]:
-	with Session(league_engine) as session:
+	with Session(league_engine, expire_on_commit=False) as session:
+		# result = session.execute(select(Player.id_64)).scalars().all()
 		return set(session.query(Log).all())
 
 def get_all_log_ids() -> set[int]:
 	with Session(league_engine) as session:
 		return {l.id for l in session.query(Log).all()}
 	# TODO fix this 
-
 
 def insert_log(log_id:int, date:datetime):
 	with Session(league_engine) as session:
