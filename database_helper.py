@@ -44,11 +44,11 @@ def construct_league(json: dict) -> League:
 	
 	# estimate league start-end dates based on match creation dates
 	league.estimate_league_dates(league_id)
-	return league.get_league(league_id)
+	return league.get_league(league_id)	
 
 def update_all_roster_info(league_id:int=None, rosters_to_update:list[Roster]=None):
-	if rosters_to_update == None:
-		if league_id == None:
+	if rosters_to_update is None:
+		if league_id is None:
 			print("Missing arguments")
 			raise Exception
 		rosters_to_update = league.get_league_rosters(league_id=league_id)
@@ -56,10 +56,11 @@ def update_all_roster_info(league_id:int=None, rosters_to_update:list[Roster]=No
 	for roster in rosters_to_update:
 		update_roster_info(roster_id=roster.id, update_players=True)
 
+
 def update_roster_info(json:dict=None, roster_id:int=None, update_players:bool=True):
 	#If not provided json content, we request it ourselves
-	if json == None:
-		if roster_id == None:
+	if json is None:
+		if roster_id is None:
 			print("either roster id or json must be provided")
 			raise Exception
 		json = request_from_ozf("roster", roster_id)
@@ -85,17 +86,44 @@ def update_roster_info(json:dict=None, roster_id:int=None, update_players:bool=T
 			# Move this out of db.py
 			db.add_player_to_roster(roster_id, player_ozf_id=player_json['id'])
 
-	
+def request_all_officials(league_id:int) -> list[dict]:
+	officials= league.get_league_officials(league_id)
+	data_list=[]
+	for o in officials:
+		data_list.append(request_from_ozf("match",o.id))
+	return data_list
+		
+def update_all_official_info(league_id:int):
+	data_list = request_all_officials(league_id)
+	for data in data_list:
+		update_official_info(data)
+
+def update_official_info(json:dict):
+	id=int(json['id'])
+	forfeit=json['forfeit_by']
+	home_team_id=int(json['home_team']['id'])
+	away_team_id=None
+	bye=True
+	if not json['away_team'] is None:
+		away_team_id=int(json['away_team']['id'])
+		bye=False
+	official.update_official(id,home_team_id,forfeit,bye,away_team_id)
 
 ### DATA FETCH METHODS
 
 def request_from_ozf(type:str, id:str, force_update:bool=False):
 	# TODO Check in the league_database if the league object is stored
 	# BEFORE we check in the cache_database for the response object
+	prefixes = {
+		"roster":"rosters",
+		"league":"leagues",
+		"match":"matches",
+		"user":"users"
+	}
 	key = f"{type}{str(id)}"
 	resp = response.get_response(key=key)
 	if resp is None or force_update:
-		url = f"{config.ozf_url_prefix}/{type}s/{str(id)}"
+		url = f"{config.ozf_url_prefix}/{prefixes[type]}/{str(id)}"
 		data = request_basic(url, config.headers)[type]
 		if force_update:
 			response.update_response(key, data)

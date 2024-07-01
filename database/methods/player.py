@@ -2,6 +2,7 @@ from db import league_engine
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from league_models import Player, PlayerInLog, Log, PlayerLogTracker
+from typing import Union
 
 def get_player_id64(ozf_id:int) -> int:
 	with Session(league_engine) as session:
@@ -45,8 +46,8 @@ def update_player(id_64:int, id3:int, name:str, ozf_id:int=None):
 # TODO MAYBE DONT NEED THIS
 def get_player_log_ids(player_id_64:int=None, player:Player=None) -> set[int]:
 	assert not (player_id_64==player==None)
-	if player_id_64 == None:
-		if player == None:
+	if player_id_64 is None:
+		if player is None:
 			raise Exception
 		else:
 			player_id_64 = player.id_64
@@ -55,20 +56,21 @@ def get_player_log_ids(player_id_64:int=None, player:Player=None) -> set[int]:
 		#https://docs.sqlalchemy.org/en/14/orm/query.html#sqlalchemy.orm.Query.join
 		return {a.log_id for a in player_log_associations}
 
-def get_player_logs(player_id_64:int=None,player:Player=None) -> set[Log]:
-	assert not (player_id_64==player==None)
-	if isinstance(player_id_64,Player):
-		player_id_64 = player_id_64.id_64
-	if player_id_64 == None:
-		if player == None:
-			raise Exception
-		else:
-			player_id_64 = player.id_64
+def get_player_logs(identifier: Union[int,str,Player]) -> set[Log]:
 	with Session(league_engine) as session:
-		player = session.get(Player,player_id_64)
-		print("getting logs",player.name)
-		query = session.query(Log).join(PlayerInLog,Log.id==PlayerInLog.log_id and PlayerInLog.player_id_64==player_id_64)
-		print(f"{player.name} is in {query.first().id}")
+		if isinstance(identifier,Player):
+			id_64 = identifier.id_64
+		elif isinstance(identifier,str):
+			id_64 = session.query(Player).filter_by(name=identifier).one()
+		elif isinstance(identifier,int):
+			id_64 = identifier
+		else:
+			raise Exception
+
+		# player = session.get(Player,id_64)
+		# print("getting logs",player.name)
+		query = session.query(Log).join(PlayerInLog,Log.id==PlayerInLog.log_id and PlayerInLog.player_id_64==id_64)
+		# print(f"{player.name} is in {query.first().id}")
 		return set(query.all())
 
 def get_existing_logs(player_ids:set[int]) -> dict[int:set[Log]]:

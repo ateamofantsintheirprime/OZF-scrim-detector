@@ -18,6 +18,6 @@ def insert_response(key:str, new_data:dict):
 def update_response(key:str, new_data:dict):
 	with Session(cache_engine) as session:
 		cached_response =  session.get(OZFResponse, key)
-		assert cached_response != None
+		assert not cached_response is None
 		cached_response.data = new_data
 		session.commit()

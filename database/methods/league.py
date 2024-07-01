@@ -1,7 +1,7 @@
 from db import league_engine
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from league_models import League, Official, Roster, Player, PlayerOnRoster
+from league_models import League, Official, Roster, Player, PlayerOnRoster, Log
 from datetime import timedelta, datetime
 
 def get_league(id:int) -> League:
@@ -11,7 +11,6 @@ def get_league(id:int) -> League:
 def insert_league(id:int, name:str):
 	with Session(league_engine) as session:
 		if session.get(League, id) is None:
-			print(id, name)
 			league = League(id=id, name=name)
 			session.add(league)
 			session.commit()
@@ -45,6 +44,10 @@ def within_season_duration(league_id:int, date:datetime):
 		league = session.get(League,league_id)
 		return league.start_date < date and league.end_date > date
 
+
+def get_league_logs(league_id:int) -> set[Log]:
+	with Session(league_engine) as session:
+		return set(session.query(Log).filter(within_season_duration(league_id,Log.date)).all())
 
 # =================================
 

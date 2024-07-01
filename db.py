@@ -33,7 +33,7 @@ CacheBase.metadata.create_all(cache_engine)
 # 	with Session(league_engine) as session:
 # 		expiry_days = 3
 # 		search_info = session.get(LogSearchInfo, id_64)
-# 		assert search_info != None
+# 		assert not search_info is None
 # 		search_info.expiry_date=datetime.today() + timedelta(days=expiry_days)
 # 		session.commit()
 
@@ -50,7 +50,7 @@ CacheBase.metadata.create_all(cache_engine)
 # def add_log_batch(id_64:int, batch_json:dict):
 # 	with Session(cache_engine) as session:
 # 		search_info = session.get(LogSearchInfo, id_64)
-# 		assert search_info != None
+# 		assert not search_info is None
 # 		stopping_id = search_info.last_log.log_id
 
 def add_player_to_roster(roster_id:int, player_ozf_id:int=None):
@@ -61,7 +61,7 @@ def add_player_to_roster(roster_id:int, player_ozf_id:int=None):
 		# Make sure roster exists
 		roster= session.get(Roster, roster_id)
 		# debug_print(f"roster id: {roster.id}")
-		assert roster != None
+		assert not roster is None
 		# Add the league_id to the playeronroster to make searching players easier
 		player_on_roster = session.get(PlayerOnRoster, (player_ozf_id, roster_id))
 		if player_on_roster is None:

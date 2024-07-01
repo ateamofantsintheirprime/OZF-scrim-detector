@@ -1,12 +1,10 @@
-from __future__ import annotations
 from ast import Div
 from codecs import backslashreplace_errors
 from turtle import back
-from typing import Optional
+from sqlalchemy.inspection import inspect
 from sqlalchemy import String, Integer, ForeignKey, DateTime, Boolean, Column, Table, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from datetime import datetime
-from sympy import true
+from pairing import pair
 
 # TODO change all mapped columns to just column()
 
@@ -14,99 +12,124 @@ from sympy import true
 class LeagueBase(DeclarativeBase):
 	pass
 
-class PlayerOnTeamInstance(LeagueBase):
-	__tablename__ = "playeronteaminstance"
-	player_id: Mapped[Integer] = mapped_column(Integer, ForeignKey("player.id_64"), primary_key=True)
-	game_id: Mapped[Integer] = mapped_column(Integer, ForeignKey("game.game_id"), primary_key=True)
-	roster_id: Mapped[Integer] = mapped_column(Integer, ForeignKey("roster.id"), primary_key=True)
+	def ident(self):
+		return inspect(self).identity
+	# def __hash__(self):
+	# 	ident = self.ident()
+	# 	h = ident[0] 
+	# 	for key in ident[1:]: # iteratively apply cantor pairing
+	# 		assert isinstance(key,Integer)
+	# 		h = pair(h,key)
+	# 	return h
+	def __eq__(self, other):
+		if type(self) == type(other):	
+			return self.__hash__() == other.__hash__()
+		return False			
+	# def __str__(self):
+	# 	for attr in inspect(self).attrs:
 
-class TeamInstance(LeagueBase):
-	__tablename__ = "teaminstance"
-	__table_args__ = (UniqueConstraint("game_id", "roster_id"),)
+	# def __repr__(self):
 
-	game_id: Mapped[Integer] = mapped_column(Integer, ForeignKey("game.game_id"), primary_key=True)
-	roster_id: Mapped[Integer] = mapped_column(Integer, ForeignKey("roster.id"), primary_key=True)
-	# A null ozf team means its a merc team
-	score : Mapped[Integer] = mapped_column(Integer)# score of THIS team
 
 class PlayerOnRoster(LeagueBase):
 	__tablename__ = "playeronroster"
-	# player_ozf_id: Mapped[Integer] = mapped_column(Integer, ForeignKey("player.ozf_id"), primary_key=True)
-	player_ozf_id: Mapped[Integer] = mapped_column(Integer, ForeignKey("player.ozf_id"), primary_key=True)
-	roster_id: Mapped[Integer] = mapped_column(Integer, ForeignKey("roster.id"), primary_key=True)
-	player_id_64: Mapped[Integer] = mapped_column(Integer, ForeignKey("player.id_64"))
-	league_id: Mapped[Optional[Integer]] = mapped_column(Integer, ForeignKey("league.id"))
+
+	# Foreign Keys
+	player_id_64 = Column(Integer, ForeignKey("player.id_64"))
+	player_ozf_id = Column(Integer, ForeignKey("player.ozf_id"), primary_key=True)
+	roster_id = Column(Integer, ForeignKey("roster.id"), primary_key=True)
+	league_id = Column(Integer, ForeignKey("league.id"), nullable=True)
  
-	player: Mapped[Player] = relationship("Player", foreign_keys=[player_ozf_id])
-	roster: Mapped[Roster] = relationship("Roster")
-	league: Mapped[League] = relationship("League")
+	# Relationships
+	player  = relationship("Player", foreign_keys=[player_ozf_id])
+	roster = relationship("Roster")
+	league  = relationship("League")
 
 	# def __init__(self, player_ozf_id, roster_id, league_id=None, player_id_64=None):
 	# 	self.player_ozf_id=player_ozf_id
 	# 	self.roster_id=roster_id
-	# 	if league_id == None:
+	# 	if league_id is None:
 	# 		self.league_id = self.league.id
-	# 	if player_id_64 == None:
+	# 	if player_id_64 is None:
 	# 		self.player_id_64 = get_player_id64(player_ozf_id)
 
 class Player(LeagueBase):
 	__tablename__ = "player"
-	id_64: Mapped[Integer] = mapped_column(Integer, primary_key=True)
-	id3: Mapped[String] = mapped_column(String, unique=True, nullable=False)
-	name: Mapped[String] = mapped_column(String, nullable=False)
-
-	ozf_id: Mapped[int] = mapped_column(Integer, unique=True)
+	# Attributes
+	id_64 = Column(Integer, primary_key=True)
+	id3 = Column(String, unique=True, nullable=False)
+	name = Column(String)
+	ozf_id = Column(Integer, unique=True)
 	
-	def __eq__(self, other):
-		if isinstance(other, Player):
-			return self.id_64 == other.id_64
-		return False
-	def __hash__(self):
-		return self.id_64
+	# def __eq__(self, other):
+	# 	if isinstance(other, Player):
+	# 		return self.id_64 == other.id_64
+	# 	return False
+	# def __hash__(self):
+	# 	return self.id_64
 	def __str__(self):
 		return f"""Player:\n\tName: {self.name}\n\tOZFID: {self.ozf_id}\n\tID_64: {self.id_64}\n\tID_3: {self.id3}\n"""
+	def __repr__(self):
+		return f"PLAYER({self.name},{self.id_64})"
 
 class Roster(LeagueBase):
 	__tablename__ = "roster"
 
-	id : Mapped[int] = mapped_column(Integer, primary_key=True) 
-	name: Mapped[String] = mapped_column(String, nullable=False)
-	# players = relationship(Player, back_populates="rosters")
-	# ozf_league: Mapped["League"] = relationship()
-	league_id: Mapped[Integer] = mapped_column(Integer, ForeignKey("league.id"))
-	division_name : Mapped[String] = mapped_column(String, ForeignKey("division.name"))
+	# Attributes
+	id  = Column(Integer, primary_key=True) 
+	name = Column(String, nullable=False)
 	
-	league: Mapped[League] = relationship("League")
-	division: Mapped[Division] = relationship("Division", foreign_keys=[league_id,division_name])
+	# Foreign Keys
+	league_id = Column(Integer, ForeignKey("league.id"))
+	division_name  = Column(String, ForeignKey("division.name"))
 	
-	def __eq__(self, other):
-		if isinstance(other, Roster):
-			return self.id == other.id
-		return False
+	# Relationships
+	league = relationship("League")
+	division = relationship("Division", foreign_keys=[league_id,division_name])
+	
+	# def __eq__(self, other):
+	# 	if isinstance(other, Roster):
+	# 		return self.id == other.id
+	# 	return False
 	def __hash__(self):
 		return self.id
 	def __str__(self):
 		return f"""Roster:\n\tName: {self.name}\n\tID: {self.id}\n\tLeague: {self.league_id}\n\tDIV: {self.division_name}\n"""
 
+
 class League(LeagueBase):
 	__tablename__ = "league"
-	id : Mapped[Integer] = mapped_column(Integer, primary_key=True)
-	name : Mapped[String] = mapped_column(String, nullable=False)
-	start_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, default=None)
-	end_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, default=None)
+
+	# Attributes
+	id  = Column(Integer, primary_key=True)
+	name  = Column(String, nullable=False)
+	start_date = Column(DateTime, nullable=True, default=None)
+	end_date = Column(DateTime, nullable=True, default=None)
 
 class Division(LeagueBase):
 	__tablename__ = "division"
 
-	league_id: Mapped[Integer] = mapped_column(Integer, ForeignKey("league.id"), primary_key=True)
-	name: Mapped[String] = mapped_column(String, primary_key=True)
+	# Attributes
+	name = Column(String, primary_key=True)
+	# Foreign Keys
+	league_id = Column(Integer, ForeignKey("league.id"), primary_key=True)
+	# Relationships
+	league = relationship(League)
 
 class PlayerInLog(LeagueBase):
 	__tablename__ = "playerinlog"
-	player_id_64: Mapped[Integer] = mapped_column(Integer, ForeignKey("player.id_64"), primary_key=True)
-	log_id: Mapped[Integer] = mapped_column(Integer, ForeignKey("log.id"), primary_key=True)
-	player_ozf_id: Mapped[Optional[Integer]] = mapped_column(Integer, ForeignKey("player.ozf_id"), nullable=True)
-	team_colour: Mapped[Optional[String]] = mapped_column(String)
+	# Attributes
+	team_colour = Column(String, nullable=True)
+	
+	# Foreign Keys
+	player_id_64 = Column(Integer, ForeignKey("player.id_64"), primary_key=True)
+	log_id = Column(Integer, ForeignKey("log.id"), primary_key=True)
+	player_ozf_id = Column(Integer, ForeignKey("player.ozf_id"), nullable=True)
+
+	# Relationships
+	player = relationship(Player, foreign_keys=[player_id_64])
+	log = relationship('Log')
+	
 	def __init__(self,player_id_64,log_id):
 		self.player_id_64=player_id_64
 		self.log_id=log_id
@@ -114,80 +137,146 @@ class PlayerInLog(LeagueBase):
 class PlayerLogTracker(LeagueBase):
 	# Class for tracking what logs might be / are not missing from a player
 	__tablename__ = "playerlogtracker"
-	id_64 = Column(Integer, primary_key=True)
+	
+	# Attributes
 	num_logs_total = Column(Integer)
 	num_logs_tracked = Column(Integer)
 	valid_until = Column(DateTime)
-	# When this info can no longer be considered trustworthy
+	
+	# Foreign Keys
+	id_64 = Column(Integer, ForeignKey("player.id_64"), primary_key=True)
 
-	# earliest_log_id = Column(Integer, ForeignKey('log.id'),nullable=True)
-	# earliest_log_tracked = relationship('Log')
-
-	# latest_log_id = Column(Integer, ForeignKey('log.id'),nullable=True)
-	# latest_log_tracked = relationship('Log')
-
-# This class should be phased out
-class LogSearchInfo(LeagueBase):
-	__tablename__ = "logsearchinfo"
-	id_64 = Column(Integer, primary_key=True)
-	num_logs = Column(Integer)
-	last_log_id = Column(Integer, ForeignKey('log.id'),nullable=True)
-	last_log = relationship('Log')
-	expiry_date = Column(DateTime)
+	# Relationships
+	player = relationship(Player)
 
 class Log(LeagueBase):
 	__tablename__ = "log"
 
-	id : Mapped[Integer] = mapped_column(Integer, primary_key=True)
-	date : Mapped[DateTime] = mapped_column(DateTime)
-	map_name : Mapped[Optional[String]] = mapped_column(String)
-	duration : Mapped[Optional[Integer]] = mapped_column(Integer)
+	# Attributes
+	id  = Column(Integer, primary_key=True)
+	date  = Column(DateTime)
+	map_name  = Column(String, nullable=True)
+	duration  = Column(Integer, nullable=True)
 
-	red_team_score: Mapped[Optional[Integer]] = mapped_column(Integer)
-	blue_team_score: Mapped[Optional[Integer]] = mapped_column(Integer)
+	red_team_score = Column(Integer, nullable=True)
+	blue_team_score = Column(Integer, nullable=True)
 	
-	# golden_cap : Mapped[Boolean] = mapped_column(Boolean)
-	def __eq__(self, other):
-		assert isinstance(other, Log)
-		# print(self.id)
-		# print(other.id)
-		# print()
-		# if isinstance(other, Log):
-		return self.id == other.id
+	# def __eq__(self, other):
+	# 	assert isinstance(other, Log)
+	# 	return self.id == other.id
+	# def __hash__(self):
+	# 	return self.id
+	def	link(self):
+		return f"logs.tf/{self.id}"
 	def __hash__(self):
 		return self.id
+	def __eq__(self,other):
+		return self.id==other.id
 	def __str__(self):
-		return str(self.id)
+		return f"log: {self.id}"
 	def __lt__(self,other):
 		return self.id < other.id
+	def __repr__(self):
+		return f"LOG({self.id})"
+
+class LogCandidate(LeagueBase):
+	__tablename__ = "logcandidate"
+	# Attributes
+	player_names = Column(String)
+	# Foreign Keys
+	official_id = Column(Integer, ForeignKey('official.id'),primary_key=True)
+	log_id = Column(Integer, ForeignKey('log.id'),primary_key=True)
+	# Relationships
+	official= relationship('Official',lazy="selectin")
+	log = relationship('Log',lazy="selectin")
+
+	def __str__(self):
+		return f"log id: {self.log_id}, participants: {self.player_names}"
+	def __hash__(self):
+		return pair(self.log_id, self.official_id)
 
 class Official(LeagueBase):
 	__tablename__ = "official"
-	# __table_args__ = (UniqueConstraint("league_id", "round_number"),)
+	# Attributes
+	id = Column(Integer, primary_key=True)
+	round_name = Column(String)
+	round_number = Column(Integer)
+	creation_date = Column(DateTime)
+	bye  = Column(Boolean, nullable=True)
+	forfeit  = Column(String, nullable=True)
+	home_team_score  = Column(Integer, nullable=True)
+	away_team_score  = Column(Integer, nullable=True)
 
-	id: Mapped[Integer] = mapped_column(Integer, primary_key=True)
-	league_id: Mapped[Integer] = mapped_column(Integer, ForeignKey("league.id"), nullable=False)
-	round_name: Mapped[String] = mapped_column(String)
-	round_number: Mapped[Integer] = mapped_column(Integer)
-	creation_date: Mapped[DateTime] = mapped_column(DateTime)
+	# Foreign Keys
+	league_id = Column(Integer, ForeignKey("league.id"))
+	home_team_id  = Column(Integer, ForeignKey("roster.id"), nullable=True)
+	away_team_id  = Column(Integer, ForeignKey("roster.id"), nullable=True)
 
-	home_team_id : Mapped[Optional[Integer]] = mapped_column(Integer, ForeignKey("roster.id"))
-	away_team_id : Mapped[Optional[Integer]] = mapped_column(Integer, ForeignKey("roster.id"))
+	# Relationships
+	home_team=relationship("Roster",foreign_keys=[home_team_id],lazy="selectin")
+	away_team=relationship("Roster",foreign_keys=[away_team_id],lazy="selectin")
 
-	home_team_score : Mapped[Optional[Integer]] = mapped_column(Integer)
-	away_team_score : Mapped[Optional[Integer]] = mapped_column(Integer)
+	def __hash__(self):
+		return self.id
+	def __str__(self):
+		if not self.home_team_id is None:
+			h_team_s=f"{self.home_team.name} ({self.home_team.id})"
+		else:
+			h_team_s="None"
+		if not self.away_team_id is None:
+			a_team_s=f"{self.away_team.name} ({self.away_team.id})"
+		else:
+			a_team_s="None"
+		return "\n\t".join([
+			f"ID: {self.id}",
+			f"Round: {self.round_number}",
+			f"Date: {self.creation_date}",
+			f"Home Team: {h_team_s}",
+			f"Away Team: {a_team_s}",	
+		])
+
+
+class PlayerOnTeamInstance(LeagueBase):
+	__tablename__ = "playeronteaminstance"
+
+	# Foreign Keys
+	player_id = Column(Integer, ForeignKey("player.id_64"), primary_key=True)
+	game_id = Column(Integer, ForeignKey("game.game_id"), primary_key=True)
+	roster_id = Column(Integer, ForeignKey("roster.id"), primary_key=True)
+
+	# Relationships
+	player = relationship('Player')
+	game = relationship('Game')
+	roster = relationship('Roster')
+
+class TeamInstance(LeagueBase):
+	__tablename__ = "teaminstance"
+	__table_args__ = (UniqueConstraint("game_id", "roster_id"),)
+	
+	# Attributes
+	score  = Column(Integer, nullable=True)# score of THIS team
+
+	# Foreign Keys
+	game_id = Column(Integer, ForeignKey("game.game_id"), primary_key=True)
+	roster_id = Column(Integer, ForeignKey("roster.id"), primary_key=True)
+	# A null ozf team means its a merc team
+
+	# Relationships
+	game = relationship('Game')
+	roster = relationship('Roster')
 
 class Game(LeagueBase):
 	"""For holding log info once all teams, rosters and players are created"""
 	__tablename__ = "game" 
+	# Attributes
+	game_id = Column(Integer, primary_key=True)
+	map_name = Column(String)
+	date = Column(DateTime)
+	duration = Column(Integer, nullable=True) # maybe change this type
 
-	official_id: Mapped[Optional[Integer]] = mapped_column(Integer, ForeignKey("official.id"))
-	game_id: Mapped[Integer] = mapped_column(Integer, primary_key=True)
-	# not a relationship or foreign key because we never
-	# want to go back to accessing the full log once we've turned it into this
-	# the full log should be deleted.
-	map_name: Mapped[String] = mapped_column(String)
-	date: Mapped[DateTime] = mapped_column(DateTime)
-	duration: Mapped[Integer] = mapped_column(Integer) # maybe change this type
-	# golden_cap: Mapped[Boolean] = mapped_column(Boolean)
+	# Foreign Keys
+	official_id = Column(Integer, ForeignKey("official.id"), nullable=True)
+	
+	# Relationships
+	official = relationship(Official)
 
