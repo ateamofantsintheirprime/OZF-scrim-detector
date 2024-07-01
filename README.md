@@ -1,53 +1,67 @@
+Changes from old design:
+
+- Now uses SQL Alchemy ORM database rather than custom json file tree.
+
+- Although certain data access needs to be done in order (roster must be retrieved from ozf before player logs can be downloaded) 
+
+- Lookup logic now largely uses SQL rather than python code
+
+- Log downloading is totally different
+
 TO DO LIST:
 
-	
-		
-	1) [] Add team matchup checking
+1) Make OZF downloader:
+    1.1) Add request re-attempting
+    1.2) Check if requested info is already in the league database before checking for a cached response.
 
-	2) [] Add test cases (no clue)
+2) Learn SQL Alchemy subqueries and other stuff needed for fast database lookups
 
-	3) [DONE] [check how accurate this estimation is] Get League start and end dates from the that the first and last matches are generated.
+3) Add test cases:
+    3.1) Find a large number (50+ ideally) of known matches between teams manually and add test cases to see if the program can autonomously find them
 
-	4) [DONE] Add checks to the first round of trimming that the log has the correct number of players. 
-		4.1) [NOT DONE] Eventually check the gamemode directly when reading the log individually (how does logs.tf get the gamemode?)
+4) Add more convenient get methods, searching rosters, players etc by name (custom fuzzy search?)
 
-	5) Extricate processes from construction, so that the program can be run with more granularity, and tested more easily (HIGH PRIORITY).
-		5.1) E.g. Simply initialising a league doesn't necesarily mean making API requests and initialising all respective teams and players.
-		5.2) The entire program shouldn't be run through constructors.
-		5.3) You should be able to easily get the logs of just one team. Or some number of teams, or just one player.
-	
-	6) Check back in on the cursed unicode filtering function
+5) Write exponential backoff clock class,  pass in a conditional, success function, and failure function, all as lambda functions. It will then keep its own sleep timer that it updates each time the conditional is checked.
 
-	7) Set up a debug toggle that prints all the detailed info. When this is toggled off just report the data. Maybe set up multiple modes so you can select what data gets printed.
+5.5) Use Events to reduce the need for exponential backoff waiting! For example the log processor can wait for a result to be available using an event. And the job dispatcher can wait for a result to be available before moving it to the outer result queue.
 
-	8) Set up the request_safe backoff time to scale exponentially based on repeated failures (across the whole threadpool) (make each thread wait a random few seconds before starting to request from the api so it doesn't abruptly make 10 requests at once when starting)
+6) Add full log downloading
 
-	9) Figure out if the resources directory actually is useable for anything
+7) Clean up all database code:
+    7.1) Write all tables using Column() rather than mapped_column()
+    7.2) Move models into their appropriate files.
+    7.3) Add class methods to the table objects. e.g. last_and_found = leagues.get_roster("last and found")  and   pengstah = last_and_found.get_player("pengstah") (note, still these methods able to be run without a class instance) 
+    7.4) Write functions that can take in multiple input types to be better, with a parameter typed as a union, with checks at the start of the function to see what type the parameter is.
+    7.5) Rename database method files.
+8) Add custom exceptions for if functions are run in the wrong order.
 
-	10) Get info on how much the trimming stage reduces the log list
+9) Add write len() function for priority queue class
 
-	11) Break down scrims by team by season and by opponent
+10) Build UI of some kind!
 
-	12) Add an expiry date to the cached responses, so the program will periodically go back and "check" that the response hasnt changed
+11) Look into downloading all of the (relevant parts of the) logs.tf database. and store a backup of this, so that it doesn't ever get erased or committed to github. and there's a specific function to access the backup and load logs from it without having to request logs.tf
 
-	13) Make it scrape the html for the match comms to see if logs were posted for a more accurate estimate of match dates.
+12) Add robustness so the program can identify and missing info that it needs to support a request and autonomously retrieve required information. For example. if the user asks which teams are  playing in a certain log, the system can notice if it doesn't have a record of a season happening then and looks for one. If it can't find one it looks through the  closest seasons to the date of that log.
 
-	14) Build a UI
+13) Identification of off-season scrims
 
-	15) Let people manually input rosters from lists of players or ozf team pages and optional date ranges so they can look at scrim results from preseason / no particular season 
+14) Visualiser to compare estimated dates with actual dates for refining estimation methods.
+    14.1) Estimated season start and end dates vs what is announced in the season description (manually find)
+    14.2) Estimated match windows vs actual match windows. 
 
-	16) Prioritising logs that are expected to feature multiple teams before the full log is requested from logs.tf
+15) Date estimation observations: 
+   - Swiss matches are usually generated shortly before the week they're played.
+   - Match windows in round robin divisions usually line up with match windows in Swiss divisions.
+   - Week 4 in round robin prem often (but not always) lines up with week 4 in Swiss inter
+   - In Swiss divisions each week will usually have the same maps being played across multiple divisions.
 
-	17) write actual test cases by collecting a bunch of scrim logs between teams and seeing if the program is able to find them (use officials they will be easiest to find)
-
-	18) make it properly record scrim results in json files, with full season breakdowns, team/roster breakdowns and player breakdowns
-
-	19) make it so you can provide any arbitrary log and it will tell u if it's two teams from some ozf season, and if so, which season
-
+Do an experiment to see if the maps see increased play in the week they are the maps for the official.
 
 NOTES: 
 
 - Consider how transfers should be handled? Are they recorded in the ozf API? if 2 core players are transferred out of a roster mid season, then post-transfer logs would not be detected properly
+
+- How do we handle round robin match gen?
 
 ===IMPORTANT IF YOU WANT TO USE THIS PROGRAM YOURSELF===
 
