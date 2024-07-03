@@ -1,11 +1,18 @@
 from db import league_engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from sqlalchemy import func, select
-from league_models import Roster, League, Division, PlayerOnRoster, Player, PlayerInLog, Log, Official, TeamInstance
+from league_models import Roster, League, Game, Division, PlayerOnRoster, Player, PlayerInLog, Log, Official, TeamInstance
 from exceptions import UpdateRosterParameterWarning
 from debug import debug_print
 from typing import Union
 from database.methods.division import get_division
+
+def delete_all_rosters():
+	with Session(league_engine) as session:
+		session.query(Roster).delete()
+		session.query(PlayerOnRoster).delete()
+		print("deleting all rosters and playeronrosters")
+		session.commit()
 
 def get_player_on_rosters(roster_id:int) -> list[PlayerOnRoster]:
 	with Session(league_engine) as session:
@@ -19,12 +26,12 @@ def get_roster(identifier:Union[int,str]) -> Roster:
 			return session.query(Roster).filter_by(name=identifier)
 		raise Exception
 
-def insert_roster(id:int, name:str, division_name:str, league_id:int) -> Roster:
+def insert_roster(id:int, name:str, division_name:str, league_id:int, team_id:int) -> Roster:
 	with Session(league_engine) as session:
 		assert not get_division(league_id, division_name) is None
 		assert not session.get(League, league_id) is None
 		if session.get(Roster, id) is None:
-			roster= Roster(id=id, name=name, division_name=division_name, league_id=league_id)
+			roster= Roster(id=id, name=name, division_name=division_name, league_id=league_id, ozf_team_id=team_id)
 			session.add(roster)
 			session.commit()
 			return roster
@@ -101,3 +108,36 @@ def get_roster_logs(roster_id:int, player_threshold:int):
 def get_all_team_instances():
 	with Session(league_engine) as session:
 		return set(session.query(TeamInstance).all())
+
+def find_roster_games(roster_id:int):
+	with Session(league_engine) as session:
+		return session.query(Game)\
+			.join(TeamInstance,TeamInstance.game_id==Game.game_id)\
+			.filter(TeamInstance.roster_id==roster_id).all()
+
+def find_roster_matchup(roster_id1:int, roster_id2:int):
+	with Session(league_engine) as session:
+		roster1_games = find_roster_games(roster_id1)
+		for game in roster1_games:
+			assert not session.get(TeamInstance, (game.game_id, roster_id1)) is None
+		roster2_games = find_roster_games(roster_id2)
+		for game in roster2_games:
+			assert not session.get(TeamInstance, (game.game_id, roster_id2)) is None
+		# This is just some sanity checking
+		
+
+		result = [game for game in roster1_games if game in roster2_games]
+		# print(result)
+		return result
+
+		# # team_instance_1 = session.get(TeamInstance, roster_id1)
+		# stmt = select(TeamInstance, team2_table).join(team2_table, team2_table.game_id==TeamInstance.game_id)
+		# result = session.execute(stmt).fetchall()
+		# print(stmt)
+		# print(result)
+		
+		# select(Game)\
+		# 	.join(TeamInstance,TeamInstance.game_id==Game.game_id)\
+		# 	.filter(TeamInstance.roster_id==roster_id1)\
+		# 	.join(TeamInstance,TeamInstance.game_id==Game.game_id)\
+		# 	.filter(TeamInstance.roster_id==roster_id1)\

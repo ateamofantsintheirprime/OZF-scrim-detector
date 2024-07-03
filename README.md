@@ -57,6 +57,24 @@ TO DO LIST:
 
 Do an experiment to see if the maps see increased play in the week they are the maps for the official.
 
+16) Turn mass requester into its own git project.
+
+17) Handle connection errors in mass reqeuster
+
+18) Redesign mass requester to use a single unified sleep time and a single worker manager to decide when to increase # of workers vs decrease
+
+19) also decrease workers when jobs arent being taken off the inner queue fast enough
+
+20) rework the whole project to use the trends.tf api
+
+21) get an estimate of how many sustained requests per second logs.tf can respond to before being throttled
+
+22) create backup databases from the logs.tf archive filtered to contain only ozf players. 
+
+23) consider merging with the trends.tf api
+
+24) Rework mass requester to have a target throughput of requests per minute and create enough workers so that, considering how long an average response takes to arrive, the throughput can be met with minimal sleep(). when being rate limited the throughput is halved and then gradually increased. if it gets halved again before reaching the previous peak, workers are culled to the number needed to reach the throughput before it was halved the second time.
+
 NOTES: 
 
 - Consider how transfers should be handled? Are they recorded in the ozf API? if 2 core players are transferred out of a roster mid season, then post-transfer logs would not be detected properly

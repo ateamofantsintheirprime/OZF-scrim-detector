@@ -65,8 +65,8 @@ class Player(LeagueBase):
 	# 	if isinstance(other, Player):
 	# 		return self.id_64 == other.id_64
 	# 	return False
-	# def __hash__(self):
-	# 	return self.id_64
+	def __hash__(self):
+		return self.id_64
 	def __str__(self):
 		return f"""Player:\n\tName: {self.name}\n\tOZFID: {self.ozf_id}\n\tID_64: {self.id_64}\n\tID_3: {self.id3}\n"""
 	def __repr__(self):
@@ -78,7 +78,8 @@ class Roster(LeagueBase):
 	# Attributes
 	id  = Column(Integer, primary_key=True) 
 	name = Column(String, nullable=False)
-	
+	ozf_team_id = Column(Integer, nullable=False)
+
 	# Foreign Keys
 	league_id = Column(Integer, ForeignKey("league.id"))
 	division_name  = Column(String, ForeignKey("division.name"))
@@ -235,7 +236,7 @@ class Official(LeagueBase):
 			f"Away Team: {a_team_s}",	
 		])
 
-
+# Might not need to use this right now
 class PlayerOnTeamInstance(LeagueBase):
 	__tablename__ = "playeronteaminstance"
 
@@ -249,17 +250,30 @@ class PlayerOnTeamInstance(LeagueBase):
 	game = relationship('Game')
 	roster = relationship('Roster')
 
+class MercTeam(LeagueBase):
+	__tablename__ = "mercteam"
+	__table_args__ = (UniqueConstraint("game_id", "colour"),)
+	merc_team_id = Column(Integer, autoincrement=True, primary_key=True)
+	player_ids = Column(String)
+	colour= Column(String)
+	score= Column(Integer)
+
+	game_id = Column(Integer, ForeignKey("game.game_id"))
+	game = relationship('Game')
+	def __str__(self):
+		return f"merc_team: ({self.game_id}, {self.colour})"
+
 class TeamInstance(LeagueBase):
 	__tablename__ = "teaminstance"
 	__table_args__ = (UniqueConstraint("game_id", "roster_id"),)
-	
+	# team_instance_id = Column(Integer, autoincrement=True, primary_key=True)
 	# Attributes
 	score  = Column(Integer, nullable=True)# score of THIS team
 
 	# Foreign Keys
 	game_id = Column(Integer, ForeignKey("game.game_id"), primary_key=True)
 	roster_id = Column(Integer, ForeignKey("roster.id"), primary_key=True)
-	# A null ozf team means its a merc team
+	# A null roster_id means its a merc team
 
 	# Relationships
 	game = relationship('Game')
@@ -273,6 +287,7 @@ class Game(LeagueBase):
 	map_name = Column(String)
 	date = Column(DateTime)
 	duration = Column(Integer, nullable=True) # maybe change this type
+	player_ids = Column(String) # only for limited use
 
 	# Foreign Keys
 	official_id = Column(Integer, ForeignKey("official.id"), nullable=True)
@@ -280,3 +295,5 @@ class Game(LeagueBase):
 	# Relationships
 	official = relationship(Official)
 
+	def __hash__(self):
+		return self.game_id

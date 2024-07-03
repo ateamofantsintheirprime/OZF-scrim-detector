@@ -27,7 +27,8 @@ def construct_league(json: dict) -> League:
 			int(roster_json['id']),
 			roster_json['name'],
 			roster_json["division"],
-			league_id
+			league_id,
+			roster_json['team_id']
 		]
 		roster.insert_roster(*roster_info)
 

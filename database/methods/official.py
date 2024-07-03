@@ -9,6 +9,14 @@ def get_official(id:int) -> Official:
 	with Session(league_engine) as session:
 		return session.get(Official, id)
 
+def get_officials_from_roster_ids(teamid1:int, teamid2:int):
+	with Session(league_engine) as session:
+		return session.query(Official).filter(\
+			(Official.away_team_id==teamid1 and \
+			Official.home_team_id==teamid2) or \
+			(Official.home_team_id==teamid1 and \
+			Official.away_team_id==teamid2)).all()
+
 def insert_official(id:int, r_name:str, r_number:int, c_date:datetime, league_id:int):
 	with Session(league_engine) as session:
 		assert not session.get(League, league_id) is None
